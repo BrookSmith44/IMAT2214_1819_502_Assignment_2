@@ -16,7 +16,6 @@ namespace IMAT2214_1819_502_Assignment_2
         {
             InitializeComponent();
 
-            // Test
         }
     }
 }
