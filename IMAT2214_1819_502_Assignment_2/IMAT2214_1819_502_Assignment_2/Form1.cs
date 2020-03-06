@@ -47,8 +47,21 @@ namespace IMAT2214_1819_502_Assignment_2
                     // Add date to the list from the second colun
                     Dates.Add(reader[1].ToString());
                 }
+
+                // Create new list for dates without timestamp
+                List<string> DatesFormatted = new List<string>();
+
+                // For loop that goes through each date in the list
+                foreach(string date in Dates)
+                {
+                    // Split creates array of substrings by splitting original string, split by empty space
+                    var dates = date.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
+                    // Add new split date to new DatesFormatted List
+                    DatesFormatted.Add(dates[0]);
+                }
+
                 // Display the populated list in the console window
-                Dates.ForEach(Console.WriteLine);
+                DatesFormatted.ForEach(Console.WriteLine);
             }
         }
     }
