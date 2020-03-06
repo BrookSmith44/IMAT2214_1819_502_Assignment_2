@@ -70,6 +70,12 @@ namespace IMAT2214_1819_502_Assignment_2
                     DatesFormatted.Add(dates[0]);
                 }
 
+                // Splitting the DatesFormatted into day, month and year
+                string[] arrayDate = DatesFormatted[0].ToString().Split('/');
+                // Display new split day, month and year in console log
+                Console.WriteLine("Day: " + arrayDate[0] + "  Month: " + arrayDate[1] + " Year: " + arrayDate[2]);
+
+
                 // Customer Dimension - Get Customer info from data set 
 
                 // Query to get all the relevant Customer Info from the data set
@@ -119,13 +125,13 @@ namespace IMAT2214_1819_502_Assignment_2
                 }
 
                 // Display the populated Dates list in the console window
-                DatesFormatted.ForEach(Console.WriteLine);
+                //DatesFormatted.ForEach(Console.WriteLine);
 
                 // Display the populated Customer list in the console window
-                Customers.ForEach(Console.WriteLine);
+                //Customers.ForEach(Console.WriteLine);
 
                 // Display the populated Products list in the console window
-                Products.ForEach(Console.WriteLine);
+                //Products.ForEach(Console.WriteLine);
 
             }
         }
