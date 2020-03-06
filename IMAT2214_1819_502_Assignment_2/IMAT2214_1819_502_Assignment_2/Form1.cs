@@ -47,6 +47,12 @@ namespace IMAT2214_1819_502_Assignment_2
             if (dayOfWeek == "Saturday" || dayOfWeek == "Sunday") weekend = true;
         }
 
+        private void insertTimeDimension()
+        {
+            // Create a connection to the MDF file
+            string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
+        }
+
         private void btnGetData_Click(object sender, EventArgs e)
         {
 
