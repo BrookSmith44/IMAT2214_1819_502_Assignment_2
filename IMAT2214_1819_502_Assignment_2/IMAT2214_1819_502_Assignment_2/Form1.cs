@@ -70,7 +70,7 @@ namespace IMAT2214_1819_502_Assignment_2
                     DatesFormatted.Add(dates[0]);
                 }
 
-                // Customer Dimension - Get Customer info from dataset 
+                // Customer Dimension - Get Customer info from data set 
 
                 // Query to get all the relevant Customer Info from the data set
                 OleDbCommand getCustomerInfo = new OleDbCommand("SELECT [Customer ID], [Customer Name], Country, City, State, [Postal Code], Region FROM Sheet1", connection);
@@ -81,20 +81,51 @@ namespace IMAT2214_1819_502_Assignment_2
                 //Read through all results
                 while (reader.Read())
                 {
+                    // Add first column to the product list
                     Customers.Add(reader[0].ToString());
+                    // Add second column to the product list
                     Customers.Add(reader[1].ToString());
+                    // Add third column to the product list
                     Customers.Add(reader[2].ToString());
+                    // Add fourth column to the product list
                     Customers.Add(reader[3].ToString());
+                    // Add fifth column to the product list
                     Customers.Add(reader[4].ToString());
+                    // Add sixth column to the product list
                     Customers.Add(reader[5].ToString());
+                    // Add seventh column to the product list
                     Customers.Add(reader[6].ToString());
+                }
+
+                // Product Dimension = Get Product info from data set
+
+                // Query to get all the relevatn customer info from the data set
+                OleDbCommand getProductInfo = new OleDbCommand("SELECT [Product ID], [Product Name], Category, [Sub-Category] FROM Sheet1", connection);
+
+                // Executes the query
+                reader = getProductInfo.ExecuteReader();
+
+                // Read through all results
+                while (reader.Read())
+                {
+                    // Add first column to the product list
+                    Products.Add(reader[0].ToString());
+                    // Add second column to the product list
+                    Products.Add(reader[1].ToString());
+                    // Add third column to the product list
+                    Products.Add(reader[2].ToString());
+                    // Add fourth column to the product list
+                    Products.Add(reader[3].ToString());
                 }
 
                 // Display the populated Dates list in the console window
                 DatesFormatted.ForEach(Console.WriteLine);
 
-                // // Display the populated Customer list in the console window
+                // Display the populated Customer list in the console window
                 Customers.ForEach(Console.WriteLine);
+
+                // Display the populated Products list in the console window
+                Products.ForEach(Console.WriteLine);
 
             }
         }
