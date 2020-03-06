@@ -20,8 +20,12 @@ namespace IMAT2214_1819_502_Assignment_2
 
         private void btnGetDates_Click(object sender, EventArgs e)
         {
+
             // Create list for the dates to be collected in
             List<string> Dates = new List<string>();
+
+            // Create list for the customer info to be collected in
+            List<string> Customers = new List<string>();
 
             // Create the database string
             string connectionString = Properties.Settings.Default.Data_set_1ConnectionString;
@@ -33,6 +37,9 @@ namespace IMAT2214_1819_502_Assignment_2
                 connection.Open();
                 // Reader provides a way of reading forward only stream of data rows from a data source
                 OleDbDataReader reader = null;
+
+                // Dates Dimension - Get Dates from dataset 
+
                 // getDates allows us to write a query in order to get the data from the rows we want
                 OleDbCommand getDates = new OleDbCommand("SELECT [Order Date], [Ship Date] FROM Sheet1", connection);
 
@@ -60,8 +67,30 @@ namespace IMAT2214_1819_502_Assignment_2
                     DatesFormatted.Add(dates[0]);
                 }
 
-                // Display the populated list in the console window
+                // Customer Dimension - Get Customer info from dataset 
+                OleDbCommand getCustomerInfo = new OleDbCommand("SELECT [Customer ID], [Customer Name], Country, City, State, [Postal Code], Region FROM Sheet1", connection);
+
+                // Executes the sql query
+                reader = getCustomerInfo.ExecuteReader();
+
+                //Read through all results
+                while (reader.Read())
+                {
+                    Customers.Add(reader[0].ToString());
+                    Customers.Add(reader[1].ToString());
+                    Customers.Add(reader[2].ToString());
+                    Customers.Add(reader[3].ToString());
+                    Customers.Add(reader[4].ToString());
+                    Customers.Add(reader[5].ToString());
+                    Customers.Add(reader[6].ToString());
+                }
+
+                // Display the populated Dates list in the console window
                 DatesFormatted.ForEach(Console.WriteLine);
+
+                // // Display the populated Customer list in the console window
+                Customers.ForEach(Console.WriteLine);
+
             }
         }
     }
