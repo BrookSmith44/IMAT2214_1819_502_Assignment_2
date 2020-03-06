@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.OleDb;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -51,6 +52,12 @@ namespace IMAT2214_1819_502_Assignment_2
         {
             // Create a connection to the MDF file
             string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
+
+            // Create a boundary for the object to be used - Object will be destroyed at the end of te block
+            using (SqlConnection myConnection = new SqlConnection(connectionStringDestination))
+            {
+
+            }
         }
 
         private void btnGetData_Click(object sender, EventArgs e)
