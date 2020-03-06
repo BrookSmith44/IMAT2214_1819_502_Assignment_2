@@ -28,25 +28,25 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.btnGetDates = new System.Windows.Forms.Button();
+            this.btnGetData = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // btnGetDates
+            // btnGetData
             // 
-            this.btnGetDates.Location = new System.Drawing.Point(12, 26);
-            this.btnGetDates.Name = "btnGetDates";
-            this.btnGetDates.Size = new System.Drawing.Size(75, 23);
-            this.btnGetDates.TabIndex = 0;
-            this.btnGetDates.Text = "Get Dates";
-            this.btnGetDates.UseVisualStyleBackColor = true;
-            this.btnGetDates.Click += new System.EventHandler(this.btnGetDates_Click);
+            this.btnGetData.Location = new System.Drawing.Point(12, 26);
+            this.btnGetData.Name = "btnGetData";
+            this.btnGetData.Size = new System.Drawing.Size(75, 23);
+            this.btnGetData.TabIndex = 0;
+            this.btnGetData.Text = "Get Data";
+            this.btnGetData.UseVisualStyleBackColor = true;
+            this.btnGetData.Click += new System.EventHandler(this.btnGetData_Click);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.btnGetDates);
+            this.Controls.Add(this.btnGetData);
             this.Name = "Form1";
             this.Text = "Form1";
             this.ResumeLayout(false);
@@ -55,7 +55,7 @@
 
         #endregion
 
-        private System.Windows.Forms.Button btnGetDates;
+        private System.Windows.Forms.Button btnGetData;
     }
 }
 

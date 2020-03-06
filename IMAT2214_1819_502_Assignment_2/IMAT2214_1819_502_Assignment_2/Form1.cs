@@ -18,7 +18,7 @@ namespace IMAT2214_1819_502_Assignment_2
             InitializeComponent();
         }
 
-        private void btnGetDates_Click(object sender, EventArgs e)
+        private void btnGetData_Click(object sender, EventArgs e)
         {
 
             // Create list for the dates to be collected in
