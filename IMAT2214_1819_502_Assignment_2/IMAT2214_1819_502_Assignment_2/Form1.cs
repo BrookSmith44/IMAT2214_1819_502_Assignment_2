@@ -48,7 +48,7 @@ namespace IMAT2214_1819_502_Assignment_2
             if (dayOfWeek == "Saturday" || dayOfWeek == "Sunday") weekend = true;
         }
 
-        private void insertTimeDimension()
+        private void insertTimeDimension(string date)
         {
             // Create a connection to the MDF file
             string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
@@ -56,7 +56,11 @@ namespace IMAT2214_1819_502_Assignment_2
             // Create a boundary for the object to be used - Object will be destroyed at the end of te block
             using (SqlConnection myConnection = new SqlConnection(connectionStringDestination))
             {
-
+                // Open the SQL connection
+                myConnection.Open();
+                // Check if the date already exists in the database - NO DUPLICATES
+                SqlCommand command = new SqlCommand("SELECT id FROM Time WHERE date = @date", myConnection);
+                command.Parameters.Add(new SqlParameter("date", date));
             }
         }
 
