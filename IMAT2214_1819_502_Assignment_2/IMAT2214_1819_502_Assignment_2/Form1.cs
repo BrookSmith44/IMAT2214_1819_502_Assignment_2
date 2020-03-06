@@ -29,6 +29,22 @@ namespace IMAT2214_1819_502_Assignment_2
             Int32 month = Convert.ToInt32(arrayDate[2]);
             // Integer variable to store year
             Int32 year = Convert.ToInt32(arrayDate[3]);
+
+            // Creates date from three seperate integers
+            DateTime myDate = new DateTime(year, month, day);
+
+            // String Variable to store the day of the week
+            string dayOfWeek = myDate.DayOfWeek.ToString();
+            // Integer variable to store the day of the year
+            Int32 dayOfYear = myDate.DayOfYear;
+            // String variable to store the name of the month
+            string monthName = myDate.ToString("MMMM");
+            // Integer variable to store the week number
+            Int32 weekNumber = myDate.DayOfYear / 7;
+            // Boolean variable to store whether it is currently the weekend or not
+            Boolean weekend = false;
+            // If statement to check if it is the weekend
+            if (dayOfWeek == "Saturday" || dayOfWeek == "Sunday") weekend = true;
         }
 
         private void btnGetData_Click(object sender, EventArgs e)
