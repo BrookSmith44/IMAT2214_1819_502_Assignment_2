@@ -27,6 +27,9 @@ namespace IMAT2214_1819_502_Assignment_2
             // Create list for the customer info to be collected in
             List<string> Customers = new List<string>();
 
+            // Create list for the customer info to be collected in
+            List<string> Products = new List<string>();
+
             // Create the database string
             string connectionString = Properties.Settings.Default.Data_set_1ConnectionString;
 
@@ -68,6 +71,8 @@ namespace IMAT2214_1819_502_Assignment_2
                 }
 
                 // Customer Dimension - Get Customer info from dataset 
+
+                // Query to get all the relevant Customer Info from the data set
                 OleDbCommand getCustomerInfo = new OleDbCommand("SELECT [Customer ID], [Customer Name], Country, City, State, [Postal Code], Region FROM Sheet1", connection);
 
                 // Executes the sql query
