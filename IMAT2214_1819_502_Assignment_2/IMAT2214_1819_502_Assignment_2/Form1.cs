@@ -62,13 +62,20 @@ namespace IMAT2214_1819_502_Assignment_2
                 SqlCommand command = new SqlCommand("SELECT id FROM Time WHERE date = @date", myConnection);
                 command.Parameters.Add(new SqlParameter("date", date));
 
+                // Create a boolean variable and set it to false as default
+                Boolean exists = false;
+
                 // Run the command and read the results
                 using (SqlDataReader reader = command.ExecuteReader())
                 {
-                    // Create a boolean variable and set it to false as default
-                    Boolean exists = false;
                     // If there are results then the date exists so change the boolean to true
                     if (reader.HasRows) exists = true;
+                }
+
+                // if there are no rows 
+                if (exists == false)
+                {
+
                 }
             }
         }
