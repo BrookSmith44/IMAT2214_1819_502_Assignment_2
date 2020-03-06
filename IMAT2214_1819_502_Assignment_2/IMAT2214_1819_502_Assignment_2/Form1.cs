@@ -18,6 +18,19 @@ namespace IMAT2214_1819_502_Assignment_2
             InitializeComponent();
         }
 
+        // Function to split the dates
+        private void splitDates (string rawData)
+        {
+            // Array to collect the data from the parameter and enter it into local array
+            string[] arrayDate = rawData.Split('/');
+            // Integer variable to store day
+            Int32 day = Convert.ToInt32(arrayDate[0]);
+            // Integer variable to store month
+            Int32 month = Convert.ToInt32(arrayDate[2]);
+            // Integer variable to store year
+            Int32 year = Convert.ToInt32(arrayDate[3]);
+        }
+
         private void btnGetData_Click(object sender, EventArgs e)
         {
 
