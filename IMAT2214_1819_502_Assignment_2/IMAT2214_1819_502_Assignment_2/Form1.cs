@@ -19,8 +19,8 @@ namespace IMAT2214_1819_502_Assignment_2
             InitializeComponent();
         }
 
-        // Function to split the dates
-        private void splitDates(string rawData)
+        // Function to split day, month and year
+        private void splitDayMonthYear(string rawData)
         {
             // Array to collect the data from the parameter and enter it into local array
             string[] arrayDate = rawData.Split('/');
@@ -34,6 +34,55 @@ namespace IMAT2214_1819_502_Assignment_2
             // Creates date from three seperate integers
             DateTime myDate = new DateTime(year, month, day);
 
+            // Convert this to a database friendly format
+            string dbDate = myDate.ToString("M/dd/yyyy");
+
+            // Call function to split the dates
+            splitDates(myDate, dbDate, day, month, year);
+        }
+
+        // Function to get the IDs for the dimensions
+        private int getIDs(string date)
+        {
+            // Create a connection to the MDF file
+            string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
+
+            // Create a boundary for the object to be used - Object will be destroyed at the end of te block
+            using (SqlConnection myConnection = new SqlConnection(connectionStringDestination))
+            {
+                // Open the SQL connection
+                myConnection.Open();
+                // Check if the date already exists in the database - NO DUPLICATES
+                SqlCommand command = new SqlCommand("SELECT Time.id FROM Time WHERE Time.date = @date" +
+                    "UNION" +
+                    "SELECT Customer.id FROM Customer WHERE Customer.id = @id" +
+                    "UNION" +
+                    "SELECT Product.id FROM Product WHERE Product.id = @id",
+                    myConnection);
+                // Add a reference to @date
+                command.Parameters.Add(new SqlParameter("date", date));
+
+                // Run the command and read the results
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    // If there are results then the date exists so change the boolean to true
+                    if (reader.HasRows)
+                    {
+                        // Store IDs in array
+                        Int32[] id = new Int32[] { Convert.ToInt32(reader["Time.id"]), Convert.ToInt32(reader["Customer.id"]), Convert.ToInt32(reader["Product.id"]) };
+                        // Return the id the reader retrieves from the database
+                        return Convert.ToInt32(reader["id"]);
+                    }
+                }
+            }
+
+            // private int requires a return value
+            return 0;
+        }
+
+        // Function to split the dates
+        private void splitDates(DateTime myDate, string dbDate, Int32 day, Int32 month, Int32 year)
+        {
             // String Variable to store the day of the week
             string dayOfWeek = myDate.DayOfWeek.ToString();
             // Integer variable to store the day of the year
@@ -46,8 +95,6 @@ namespace IMAT2214_1819_502_Assignment_2
             Boolean weekend = false;
             // If statement to check if it is the weekend
             if (dayOfWeek == "Saturday" || dayOfWeek == "Sunday") weekend = true;
-            // Convert this to a database friendly format
-            string dbDate = myDate.ToString("M/dd/yyyy");
 
             // Execute function to insert data into the time dimension
             insertTimeDimension(dbDate, dayOfWeek, day, monthName, month, weekNumber, year, weekend, dayOfYear);
@@ -320,7 +367,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 foreach (string date in DatesFormatted)
                 {
                     // Call function to split the dates with the date as a parameter
-                    splitDates(date);
+                    splitDayMonthYear(date);
                 }
 
                 // Splitting the DatesFormatted into day, month and year
