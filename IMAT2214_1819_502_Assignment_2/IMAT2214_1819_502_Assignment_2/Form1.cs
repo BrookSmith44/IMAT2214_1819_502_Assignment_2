@@ -20,7 +20,7 @@ namespace IMAT2214_1819_502_Assignment_2
         }
 
         // Function to split the dates
-        private void splitDates (string rawData)
+        private void splitDates(string rawData)
         {
             // Array to collect the data from the parameter and enter it into local array
             string[] arrayDate = rawData.Split('/');
@@ -46,9 +46,14 @@ namespace IMAT2214_1819_502_Assignment_2
             Boolean weekend = false;
             // If statement to check if it is the weekend
             if (dayOfWeek == "Saturday" || dayOfWeek == "Sunday") weekend = true;
+            // Convert this to a database friendly format
+            string dbDate = myDate.ToString("M/dd/yyyy");
+
+            // Execute function to insert data into the time dimension
+            insertTimeDimension(dbDate, dayOfWeek, day, monthName, month, weekNumber, year, weekend, dayOfYear);
         }
 
-        private void insertTimeDimension(string date)
+        private void insertTimeDimension(string date, string dayName, Int32 dayNumber, string monthName, Int32 monthNumber, Int32 weekNumber, Int32 year, Boolean weekend, Int32 dayOfYear)
         {
             // Create a connection to the MDF file
             string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
@@ -60,6 +65,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 myConnection.Open();
                 // Check if the date already exists in the database - NO DUPLICATES
                 SqlCommand command = new SqlCommand("SELECT id FROM Time WHERE date = @date", myConnection);
+                // Add a reference to @date
                 command.Parameters.Add(new SqlParameter("date", date));
 
                 // Create a boolean variable and set it to false as default
@@ -75,7 +81,33 @@ namespace IMAT2214_1819_502_Assignment_2
                 // if there are no rows 
                 if (exists == false)
                 {
+                    // SQL command to inset data into the time dimension table
+                    SqlCommand insertCommand = new SqlCommand(
+                        "INSERT INTO Time (dayName, dayNumber, monthName, monthNumber, weekNumber, year, weekend, date, dayOfYear)" +
+                        "VALUES (@dayName, @dayNumber, @monthName, @monthNumber, @weekNumber, @year, @weekend, @date, @dayOfYear)",
+                        myConnection);
+                    // Add a reference to @dayName
+                    insertCommand.Parameters.Add(new SqlParameter("dayName", dayName));
+                    // Add a reference to @dayNumber
+                    insertCommand.Parameters.Add(new SqlParameter("dayNumber", dayNumber));
+                    // Add a reference to @monthName
+                    insertCommand.Parameters.Add(new SqlParameter("monthName", monthName));
+                    // Add a reference to @monthNumber
+                    insertCommand.Parameters.Add(new SqlParameter("monthNumber", monthNumber));
+                    // Add a reference to @weekNumber
+                    insertCommand.Parameters.Add(new SqlParameter("weekNumber", weekNumber));
+                    // Add a reference to @year
+                    insertCommand.Parameters.Add(new SqlParameter("year", year));
+                    // Add a reference to @weekend
+                    insertCommand.Parameters.Add(new SqlParameter("weekend", weekend));
+                    // Add a reference to @date
+                    insertCommand.Parameters.Add(new SqlParameter("date", date));
+                    // Add a reference to @dayOfYear
+                    insertCommand.Parameters.Add(new SqlParameter("dayOfYear", dayOfYear));
 
+                    // Insert the line 
+                    int recordAffected = insertCommand.ExecuteNonQuery();
+                    Console.WriteLine("Records Affected: " + recordAffected);
                 }
             }
         }
@@ -124,7 +156,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 List<string> DatesFormatted = new List<string>();
 
                 // For each loop that goes through each date in the list
-                foreach(string date in Dates)
+                foreach (string date in Dates)
                 {
                     // Split creates array of substrings by splitting original string, split by empty space
                     var dates = date.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
@@ -133,7 +165,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 }
 
                 // For each loop goes through each date in DatesFormatted list
-                foreach(string date in DatesFormatted)
+                foreach (string date in DatesFormatted)
                 {
                     splitDates(date);
                 }
