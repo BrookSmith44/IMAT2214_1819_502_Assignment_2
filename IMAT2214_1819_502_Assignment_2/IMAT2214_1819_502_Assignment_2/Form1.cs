@@ -59,11 +59,9 @@ namespace IMAT2214_1819_502_Assignment_2
             // Array to collect the data from the parameter and enter it into local array
             string[] arrayCustomer = rawData.Split('/');
 
-            // SELECT [Customer ID], [Customer Name], Country, City, State, [Postal Code], Region
-
             // Customer info
-            // Integer to store the customer id as reference
-            Int32 reference = Convert.ToInt32(arrayCustomer[0]);
+            // string to store the customer id as reference
+            string reference = arrayCustomer[0];
             // String to store the customer name
             string customerName = arrayCustomer[1];
             // String to store the country
@@ -141,9 +139,59 @@ namespace IMAT2214_1819_502_Assignment_2
         }
 
         // Function to insert data into the customer dimension
-        private void insertCustomerDimension(Int32 reference, string customerName, string country, string city, string state, string postcode, string region)
+        private void insertCustomerDimension(string reference, string customerName, string country, string city, string state, string postcode, string region)
         {
+            // Create a connection to the MDF file
+            string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
 
+            // Create a boundary for the object to be used - Object will be destroyed at the end of te block
+            using (SqlConnection myConnection = new SqlConnection(connectionStringDestination))
+            {
+                // Open the SQL connection
+                myConnection.Open();
+                // Check if the customer already exists in the database - NO DUPLICATES
+                SqlCommand command = new SqlCommand("SELECT id FROM Customer WHERE customer = @reference", myConnection);
+                // Add a reference to @reference
+                command.Parameters.Add(new SqlParameter("reference", reference));
+
+                // Create a boolean variable and set it to false as default
+                Boolean exists = false;
+
+                // Run the command and read the results
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    // If there are results then the customer exists so change the boolean to true
+                    if (reader.HasRows) exists = true;
+                }
+
+                // if there are no rows 
+                if (exists == false)
+                {
+                    // SQL command to inset data into the customer dimension table
+                    SqlCommand insertCommand = new SqlCommand(
+                        "INSERT INTO Customer (name, country, city, state, postalCode, region, reference)" +
+                        "VALUES (@name, @country, @city, @state, @postalCode, @region, @reference)",
+                        myConnection);
+                    // Add a reference to @name
+                    insertCommand.Parameters.Add(new SqlParameter("name", customerName));
+                    // Add a reference to @country
+                    insertCommand.Parameters.Add(new SqlParameter("country", country));
+                    // Add a reference to @city
+                    insertCommand.Parameters.Add(new SqlParameter("city", city));
+                    // Add a reference to @state
+                    insertCommand.Parameters.Add(new SqlParameter("state", state));
+                    // Add a reference to @postalCode
+                    insertCommand.Parameters.Add(new SqlParameter("postalCode", postcode));
+                    // Add a reference to @region
+                    insertCommand.Parameters.Add(new SqlParameter("region", region));
+                    // Add a reference to @reference
+                    insertCommand.Parameters.Add(new SqlParameter("reference", reference));
+
+                    // Insert the line 
+                    int recordAffected = insertCommand.ExecuteNonQuery();
+                    Console.WriteLine("Records Affected: " + recordAffected);
+                }
+            }
         }
 
         // Activates when get data button is clicked
@@ -209,7 +257,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Splitting the DatesFormatted into day, month and year
                 string[] arrayDate = DatesFormatted[0].ToString().Split('/');
                 // Display new split day, month and year in console log
-                Console.WriteLine("Day: " + arrayDate[0] + "  Month: " + arrayDate[1] + " Year: " + arrayDate[2]);
+                //Console.WriteLine("Day: " + arrayDate[0] + "  Month: " + arrayDate[1] + " Year: " + arrayDate[2]);
 
 
                 // Customer Dimension - Get Customer info from data set 
@@ -242,6 +290,8 @@ namespace IMAT2214_1819_502_Assignment_2
                 // For each loop goes through each customers info
                 foreach (string customer in Customers)
                 {
+                    // Console to check how to split customer info
+                    Console.WriteLine(customer);
                     // Call to split customer function with customer as a parameter
                     splitCustomers(customer);
                 }
