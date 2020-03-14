@@ -79,6 +79,26 @@ namespace IMAT2214_1819_502_Assignment_2
             insertCustomerDimension(reference, customerName,  country, city, state, postcode, region);
         }
 
+        // Function to split the product info
+        private void splitProduct(string rawData)
+        {
+            // Array to collect the data from the products list, split by the slashes between
+            string[] arrayProduct = rawData.Split('/');
+
+            // String to store the product id as reference
+            string reference = arrayProduct[0];
+            // String to store the category
+            string category = arrayProduct[1];
+            // String to store the subcategory
+            string subcategory = arrayProduct[3];
+            // String to store the product name
+            string productName = arrayProduct[4];
+
+            // Call function to insert data into product dimension
+            insertProductDimension(reference, category, subcategory, productName);
+
+        }
+
         private void insertTimeDimension(string date, string dayName, Int32 dayNumber, string monthName, Int32 monthNumber, Int32 weekNumber, Int32 year, Boolean weekend, Int32 dayOfYear)
         {
             // Create a connection to the MDF file
