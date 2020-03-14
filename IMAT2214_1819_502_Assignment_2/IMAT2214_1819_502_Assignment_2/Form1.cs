@@ -300,14 +300,17 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Read through all results
                 while (reader.Read())
                 {
-                    // Add first column to the product list
-                    Products.Add(reader[0].ToString());
-                    // Add second column to the product list
-                    Products.Add(reader[1].ToString());
-                    // Add third column to the product list
-                    Products.Add(reader[2].ToString());
-                    // Add fourth column to the product list
-                    Products.Add(reader[3].ToString());
+                    // Add the products found in the query by the reader into a string
+                    Products.Add(reader[0].ToString() + "/" +
+                        reader[1].ToString() + "/" +
+                        reader[2].ToString() + "/" +
+                        reader[3].ToString());
+                }
+
+                // For each loop to go through all product info
+                foreach (string product in Products) {
+                    // Call the function to split the product info 
+                    splitProducts(product);
                 }
 
                 // Display the populated Dates list in the console window
