@@ -69,7 +69,7 @@ namespace IMAT2214_1819_502_Assignment_2
                     if (reader.HasRows)
                     {
                         // Store IDs in array
-                        Int32[] id = new Int32[] { Convert.ToInt32(reader["Time.id"]), Convert.ToInt32(reader["Customer.id"]), Convert.ToInt32(reader["Product.id"]) };
+                        int[] id = new int[] { Convert.ToInt32(reader["Time.id"]), Convert.ToInt32(reader["Customer.id"]), Convert.ToInt32(reader["Product.id"]) };
                         // Return the id the reader retrieves from the database
                         return Convert.ToInt32(reader["id"]);
                     }
@@ -439,6 +439,66 @@ namespace IMAT2214_1819_502_Assignment_2
                 //Products.ForEach(Console.WriteLine);
 
             }
+        }
+
+        private void btnGetDestinationData_Click(object sender, EventArgs e)
+        {
+            // Product Dimension
+            // Create a list to store the data in
+            List<string> DestinationProducts = new List<string>();
+
+            // Set the datasource to null to stop program from crashing
+            listBoxProductDestination.DataSource = null;
+            // Clear listbox to make sure there is no old data there
+            listBoxProductDestination.Items.Clear();
+
+            // Create a connection to MDF File
+            string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
+
+            // Create a boundary for the object to be used - Object will be destroyed at the end of te block
+            using (SqlConnection myConnection = new SqlConnection(connectionStringDestination))
+            {
+                // Open sql connection
+                myConnection.Open();
+                // Check if the product already exists in the destination database
+                SqlCommand command = new SqlCommand("SELECT id, category, subcategory, name, reference FROM Product", myConnection);
+
+
+                // Create a boundary in which the reader can be used to read the data from the sql query
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    // If there is data 
+                    if(reader.HasRows)
+                    {
+                        // Loop to read through the data
+                        while(reader.Read())
+                        {
+                            // Display data from the Product tabke in the listbox
+                            string id = reader["id"].ToString();
+                            string category = reader["category"].ToString();
+                            string subcategory = reader["subcategory"].ToString();
+                            string name = reader["name"].ToString();
+                            string reference = reader["reference"].ToString();
+
+                            // string to store data as detailed text
+                            string text = "ID: " + id + ", Category: " + category + ", Subcategory: " + 
+                                ", Name: " + name + ", Reference: " + reference ;
+
+                            // Add text string to list
+                            DestinationProducts.Add(text);
+                        }
+                    }
+                    // Else if there is no data
+                    else
+                    {
+                        DestinationProducts.Add("No data present in the product dimension");
+                    }
+                }
+            }
+
+            // Bind the listbox to list
+            listBoxProductDestination.DataSource = DestinationProducts;
+
         }
     }
 }
