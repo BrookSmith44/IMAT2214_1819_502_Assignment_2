@@ -27,9 +27,9 @@ namespace IMAT2214_1819_502_Assignment_2
             // Integer variable to store day
             Int32 day = Convert.ToInt32(arrayDate[0]);
             // Integer variable to store month
-            Int32 month = Convert.ToInt32(arrayDate[2]);
+            Int32 month = Convert.ToInt32(arrayDate[1]);
             // Integer variable to store year
-            Int32 year = Convert.ToInt32(arrayDate[3]);
+            Int32 year = Convert.ToInt32(arrayDate[2]);
 
             // Creates date from three seperate integers
             DateTime myDate = new DateTime(year, month, day);
@@ -155,13 +155,19 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Create new list for dates without timestamp
                 List<string> DatesFormatted = new List<string>();
 
-                // For loop that goes through each date in the list
+                // For each loop that goes through each date in the list
                 foreach(string date in Dates)
                 {
                     // Split creates array of substrings by splitting original string, split by empty space
                     var dates = date.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
                     // Add new split date to new DatesFormatted List
                     DatesFormatted.Add(dates[0]);
+                }
+
+                // For each loop goes through each date in DatesFormatted list
+                foreach(string date in DatesFormatted)
+                {
+                    splitDates(date);
                 }
 
                 // Splitting the DatesFormatted into day, month and year

@@ -130,6 +130,10 @@
     <Content Include="Database\DestinationDatabase.mdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="Database\DestinationDatabase_log.ldf">
+      <DependentUpon>DestinationDatabase.mdf</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="External Files\Data set 1.accdb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
