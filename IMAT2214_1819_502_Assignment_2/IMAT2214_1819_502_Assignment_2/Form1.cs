@@ -80,19 +80,19 @@ namespace IMAT2214_1819_502_Assignment_2
         }
 
         // Function to split the product info
-        private void splitProduct(string rawData)
+        private void splitProducts(string rawData)
         {
             // Array to collect the data from the products list, split by the slashes between
             string[] arrayProduct = rawData.Split('/');
 
             // String to store the product id as reference
             string reference = arrayProduct[0];
+            // String to store the product name
+            string productName = arrayProduct[1];
             // String to store the category
-            string category = arrayProduct[1];
+            string category = arrayProduct[2];
             // String to store the subcategory
             string subcategory = arrayProduct[3];
-            // String to store the product name
-            string productName = arrayProduct[4];
 
             // Call function to insert data into product dimension
             insertProductDimension(reference, category, subcategory, productName);
@@ -204,6 +204,55 @@ namespace IMAT2214_1819_502_Assignment_2
                     insertCommand.Parameters.Add(new SqlParameter("postalCode", postcode));
                     // Add a reference to @region
                     insertCommand.Parameters.Add(new SqlParameter("region", region));
+                    // Add a reference to @reference
+                    insertCommand.Parameters.Add(new SqlParameter("reference", reference));
+
+                    // Insert the line 
+                    int recordAffected = insertCommand.ExecuteNonQuery();
+                    Console.WriteLine("Records Affected: " + recordAffected);
+                }
+            }
+        }
+
+        private void insertProductDimension(string reference, string category, string subcategory, string productName)
+        {
+            // Create a connection to the MDF file
+            string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
+
+            // Create a boundary for the object to be used - Object will be destroyed at the end of te block
+            using (SqlConnection myConnection = new SqlConnection(connectionStringDestination))
+            {
+                // Open the SQL connection
+                myConnection.Open();
+                // Check if the product already exists in the database - NO DUPLICATES
+                SqlCommand command = new SqlCommand("SELECT id FROM Product WHERE reference = @reference", myConnection);
+                // Add a reference to @reference
+                command.Parameters.Add(new SqlParameter("reference", reference));
+
+                // Create a boolean variable and set it to false as default
+                Boolean exists = false;
+
+                // Run the command and read the results
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    // If there are results then the customer exists so change the boolean to true
+                    if (reader.HasRows) exists = true;
+                }
+
+                // if there are no rows 
+                if (exists == false)
+                {
+                    // SQL command to inset data into the product dimension table
+                    SqlCommand insertCommand = new SqlCommand(
+                        "INSERT INTO Product (category, subcategory, name, reference)" +
+                        "VALUES (@category, @subcategory, @name, @reference)",
+                        myConnection);
+                    // Add a reference to @category
+                    insertCommand.Parameters.Add(new SqlParameter("category", category));
+                    // Add a reference to @subcategory
+                    insertCommand.Parameters.Add(new SqlParameter("subcategory", subcategory));
+                    // Add a reference to @name
+                    insertCommand.Parameters.Add(new SqlParameter("name", productName));
                     // Add a reference to @reference
                     insertCommand.Parameters.Add(new SqlParameter("reference", reference));
 
