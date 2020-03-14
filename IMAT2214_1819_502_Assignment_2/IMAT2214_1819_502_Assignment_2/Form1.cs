@@ -46,14 +46,9 @@ namespace IMAT2214_1819_502_Assignment_2
             Boolean weekend = false;
             // If statement to check if it is the weekend
             if (dayOfWeek == "Saturday" || dayOfWeek == "Sunday") weekend = true;
-            // Convert this to a database friendly format
-            string dbDate = myDate.ToString("M/dd/yyyy");
-
-            // Execute function to insert data into the time dimension
-            insertTimeDimension(dbDate, dayOfWeek, day, monthName, month, weekNumber, year, weekend, dayOfYear);
         }
 
-        private void insertTimeDimension(string date, string dayName, Int32 dayNumber, string monthName, Int32 monthNumber, Int32 weekNumber, Int32 year, Boolean weekend, Int32 dayOfYear)
+        private void insertTimeDimension(string date)
         {
             // Create a connection to the MDF file
             string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
@@ -65,7 +60,6 @@ namespace IMAT2214_1819_502_Assignment_2
                 myConnection.Open();
                 // Check if the date already exists in the database - NO DUPLICATES
                 SqlCommand command = new SqlCommand("SELECT id FROM Time WHERE date = @date", myConnection);
-                // Add a reference to @date
                 command.Parameters.Add(new SqlParameter("date", date));
 
                 // Create a boolean variable and set it to false as default
@@ -81,33 +75,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 // if there are no rows 
                 if (exists == false)
                 {
-                    // SQL command to inset data into the time dimension table
-                    SqlCommand insertCommand = new SqlCommand(
-                        "INSERT INTO Time (dayName, dayNumber, monthName, monthNumber, weekNumber, year, weekend, date, dayOfYear)" +
-                        "VALUES (@dayName, @dayNumber, @monthName, @monthNumber, @weekNumber, @year, @weekend, @date, @dayOfYear)",
-                        myConnection);
-                    // Add a reference to @dayName
-                    insertCommand.Parameters.Add(new SqlParameter("dayName", dayName));
-                    // Add a reference to @dayNumber
-                    insertCommand.Parameters.Add(new SqlParameter("dayNumber", dayNumber));
-                    // Add a reference to @monthName
-                    insertCommand.Parameters.Add(new SqlParameter("monthName", monthName));
-                    // Add a reference to @monthNumber
-                    insertCommand.Parameters.Add(new SqlParameter("monthNumber", monthNumber));
-                    // Add a reference to @weekNumber
-                    insertCommand.Parameters.Add(new SqlParameter("weekNumber", weekNumber));
-                    // Add a reference to @year
-                    insertCommand.Parameters.Add(new SqlParameter("year", year));
-                    // Add a reference to @weekend
-                    insertCommand.Parameters.Add(new SqlParameter("weekend", weekend));
-                    // Add a reference to @date
-                    insertCommand.Parameters.Add(new SqlParameter("date", date));
-                    // Add a reference to @dayOfYear
-                    insertCommand.Parameters.Add(new SqlParameter("dayOfYear", dayOfYear));
 
-                    // Insert the line 
-                    int recordAffected = insertCommand.ExecuteNonQuery();
-                    Console.WriteLine("Records Affected: " + recordAffected);
                 }
             }
         }
