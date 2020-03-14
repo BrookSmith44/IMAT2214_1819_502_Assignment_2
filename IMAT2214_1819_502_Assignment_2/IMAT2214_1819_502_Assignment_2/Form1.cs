@@ -150,7 +150,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Open the SQL connection
                 myConnection.Open();
                 // Check if the customer already exists in the database - NO DUPLICATES
-                SqlCommand command = new SqlCommand("SELECT id FROM Customer WHERE customer = @reference", myConnection);
+                SqlCommand command = new SqlCommand("SELECT id FROM Customer WHERE reference = @reference", myConnection);
                 // Add a reference to @reference
                 command.Parameters.Add(new SqlParameter("reference", reference));
 
@@ -271,20 +271,14 @@ namespace IMAT2214_1819_502_Assignment_2
                 //Read through all results
                 while (reader.Read())
                 {
-                    // Add first column to the product list
-                    Customers.Add(reader[0].ToString());
-                    // Add second column to the product list
-                    Customers.Add(reader[1].ToString());
-                    // Add third column to the product list
-                    Customers.Add(reader[2].ToString());
-                    // Add fourth column to the product list
-                    Customers.Add(reader[3].ToString());
-                    // Add fifth column to the product list
-                    Customers.Add(reader[4].ToString());
-                    // Add sixth column to the product list
-                    Customers.Add(reader[5].ToString());
-                    // Add seventh column to the product list
-                    Customers.Add(reader[6].ToString());
+                    // Add the customers found in the query by the reader into a string
+                    Customers.Add(reader[0].ToString() + "/" +
+                        reader[1].ToString() + "/" +
+                        reader[2].ToString() + "/" +
+                        reader[3].ToString() + "/" +
+                        reader[4].ToString() + "/" +
+                        reader[5].ToString() + "/" +
+                        reader[6].ToString());
                 }
 
                 // For each loop goes through each customers info
