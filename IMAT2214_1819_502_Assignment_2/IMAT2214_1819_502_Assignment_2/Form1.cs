@@ -53,6 +53,34 @@ namespace IMAT2214_1819_502_Assignment_2
             insertTimeDimension(dbDate, dayOfWeek, day, monthName, month, weekNumber, year, weekend, dayOfYear);
         }
 
+        // Function to split the customer info
+        private void splitCustomers(string rawData)
+        {
+            // Array to collect the data from the parameter and enter it into local array
+            string[] arrayCustomer = rawData.Split('/');
+
+            // SELECT [Customer ID], [Customer Name], Country, City, State, [Postal Code], Region
+
+            // Customer info
+            // Integer to store the customer id as reference
+            Int32 reference = Convert.ToInt32(arrayCustomer[0]);
+            // String to store the customer name
+            string customerName = arrayCustomer[1];
+            // String to store the country
+            string country = arrayCustomer[2];
+            // String to store the city
+            string city = arrayCustomer[3];
+            // String to store the state
+            string state = arrayCustomer[4];
+            // String to store the postcode
+            string postcode = arrayCustomer[5];
+            // String to store the region
+            string region = arrayCustomer[6];
+
+            // Execute the query to insert the data into the customer dimension
+            insertCustomerDimension(reference, customerName,  country, city, state, postcode, region);
+        }
+
         private void insertTimeDimension(string date, string dayName, Int32 dayNumber, string monthName, Int32 monthNumber, Int32 weekNumber, Int32 year, Boolean weekend, Int32 dayOfYear)
         {
             // Create a connection to the MDF file
@@ -112,6 +140,13 @@ namespace IMAT2214_1819_502_Assignment_2
             }
         }
 
+        // Function to insert data into the customer dimension
+        private void insertCustomerDimension(Int32 reference, string customerName, string country, string city, string state, string postcode, string region)
+        {
+
+        }
+
+        // Activates when get data button is clicked
         private void btnGetData_Click(object sender, EventArgs e)
         {
 
@@ -167,6 +202,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 // For each loop goes through each date in DatesFormatted list
                 foreach (string date in DatesFormatted)
                 {
+                    // Call function to split the dates with the date as a parameter
                     splitDates(date);
                 }
 
@@ -203,6 +239,12 @@ namespace IMAT2214_1819_502_Assignment_2
                     Customers.Add(reader[6].ToString());
                 }
 
+                // For each loop goes through each customers info
+                foreach (string customer in Customers)
+                {
+                    // Call to split customer function with customer as a parameter
+                    splitCustomers(customer);
+                }
                 // Product Dimension = Get Product info from data set
 
                 // Query to get all the relevatn customer info from the data set
