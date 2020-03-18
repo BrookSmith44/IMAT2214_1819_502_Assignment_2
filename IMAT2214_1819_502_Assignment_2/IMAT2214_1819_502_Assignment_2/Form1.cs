@@ -443,8 +443,12 @@ namespace IMAT2214_1819_502_Assignment_2
 
         private void btnGetDestinationData_Click(object sender, EventArgs e)
         {
+            // Time Dimension
+            // Create a list to store the dates data im
+            List<string> destinationDates = new List<string>();
+
             // Product Dimension
-            // Create a list to store the data in
+            // Create a list to store the product data in
             List<string> DestinationProducts = new List<string>();
 
             // Set the datasource to null to stop program from crashing
@@ -460,12 +464,54 @@ namespace IMAT2214_1819_502_Assignment_2
             {
                 // Open sql connection
                 myConnection.Open();
-                // Check if the product already exists in the destination database
-                SqlCommand command = new SqlCommand("SELECT id, category, subcategory, name, reference FROM Product", myConnection);
 
+                // Time Dimension
+                SqlCommand datesCommand = new SqlCommand("SELECT id, dayName, dayNumber, monthName, monthNumber, weekNumber, year," +
+                    "weekend, date, dayOfYear FROM Time", myConnection);
+
+                // Product Dimension
+                // Check if the product already exists in the destination database
+                SqlCommand ProductCommand = new SqlCommand("SELECT id, category, subcategory, name, reference FROM Product", myConnection);
 
                 // Create a boundary in which the reader can be used to read the data from the sql query
-                using (SqlDataReader reader = command.ExecuteReader())
+                using (SqlDataReader reader = datesCommand.ExecuteReader())
+                {
+                    // If there is data 
+                    if (reader.HasRows)
+                    {
+                        // Loop to read through the data
+                        while (reader.Read())
+                        {
+                            // Display data from the Time table in the listbox
+                            string id = reader["id"].ToString();
+                            string dayName = reader["dayName"].ToString();
+                            string dayNumber = reader["dayNumber"].ToString();
+                            string monthName = reader["monthName"].ToString();
+                            string monthNumber = reader["monthNumber"].ToString();
+                            string year = reader["year"].ToString();
+                            string weekend = reader["weekend"].ToString();
+                            string date = reader["date"].ToString();
+                            string dayOfYear = reader["dayOfYear"].ToString();
+
+                            // string to store data as detailed text
+                            string text = "ID: " + id + ", Day Name: " + dayName + ", Day Number: " + dayNumber +
+                                ", Month Name: " + monthName + ", Month Number: " + monthNumber +
+                                ", Year: " + year + ", Weekend: " + weekend + ", Date: " + date +
+                                ", Day of the Year: " + dayOfYear;
+
+                            // Add text string to list
+                            destinationDates.Add(text);
+                        }
+                    }
+                    // Else if there is no data
+                    else
+                    {
+                        destinationDates.Add("No data present in the product dimension");
+                    }
+                }
+
+                // Create a boundary in which the reader can be used to read the data from the sql query
+                using (SqlDataReader reader = ProductCommand.ExecuteReader())
                 {
                     // If there is data 
                     if(reader.HasRows)
@@ -498,6 +544,12 @@ namespace IMAT2214_1819_502_Assignment_2
 
             // Bind the listbox to list
             listBoxProductDestination.DataSource = DestinationProducts;
+
+            // Display list in console
+            foreach (string dates in destinationDates)
+            {
+                Console.WriteLine(dates);
+            }
 
         }
     }
