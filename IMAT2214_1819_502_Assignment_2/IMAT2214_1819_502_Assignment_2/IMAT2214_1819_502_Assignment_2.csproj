@@ -134,6 +134,7 @@
       <DependentUpon>DestinationDatabase.mdf</DependentUpon>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="dbo.FactTable.sql" />
     <Content Include="External Files\Data set 1.accdb">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

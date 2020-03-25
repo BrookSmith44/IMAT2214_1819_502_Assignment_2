@@ -31,6 +31,7 @@
             this.btnGetData = new System.Windows.Forms.Button();
             this.listBoxProductDestination = new System.Windows.Forms.ListBox();
             this.btnGetDestinationData = new System.Windows.Forms.Button();
+            this.btnFactTable = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnGetData
@@ -62,11 +63,22 @@
             this.btnGetDestinationData.UseVisualStyleBackColor = true;
             this.btnGetDestinationData.Click += new System.EventHandler(this.btnGetDestinationData_Click);
             // 
+            // btnFactTable
+            // 
+            this.btnFactTable.Location = new System.Drawing.Point(230, 396);
+            this.btnFactTable.Name = "btnFactTable";
+            this.btnFactTable.Size = new System.Drawing.Size(105, 42);
+            this.btnFactTable.TabIndex = 3;
+            this.btnFactTable.Text = "Build Fact Table";
+            this.btnFactTable.UseVisualStyleBackColor = true;
+            this.btnFactTable.Click += new System.EventHandler(this.btnFactTable_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btnFactTable);
             this.Controls.Add(this.btnGetDestinationData);
             this.Controls.Add(this.listBoxProductDestination);
             this.Controls.Add(this.btnGetData);
@@ -81,6 +93,7 @@
         private System.Windows.Forms.Button btnGetData;
         private System.Windows.Forms.ListBox listBoxProductDestination;
         private System.Windows.Forms.Button btnGetDestinationData;
+        private System.Windows.Forms.Button btnFactTable;
     }
 }
 

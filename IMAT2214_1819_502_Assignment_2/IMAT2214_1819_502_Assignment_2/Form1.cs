@@ -42,7 +42,7 @@ namespace IMAT2214_1819_502_Assignment_2
         }
 
         // Function to get the IDs for the dimensions
-        private int getIDs(string date)
+        private int getIDs(string date, string customerID, string productID, string dimension)
         {
             // Create a connection to the MDF file
             string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
@@ -53,14 +53,18 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Open the SQL connection
                 myConnection.Open();
                 // Check if the date already exists in the database - NO DUPLICATES
-                SqlCommand command = new SqlCommand("SELECT Time.id FROM Time WHERE Time.date = @date" +
-                    "UNION" +
-                    "SELECT Customer.id FROM Customer WHERE Customer.id = @id" +
-                    "UNION" +
-                    "SELECT Product.id FROM Product WHERE Product.id = @id",
+                SqlCommand command = new SqlCommand("SELECT Time.id FROM Time WHERE Time.date = @date " +
+                    "UNION " +
+                    "SELECT Customer.id FROM Customer WHERE Customer.id = @customerid " +
+                    "UNION " +
+                    "SELECT Product.id FROM Product WHERE Product.id = @productid",
                     myConnection);
                 // Add a reference to @date
                 command.Parameters.Add(new SqlParameter("date", date));
+                // Add a reference to @customerid
+                command.Parameters.Add(new SqlParameter("customerid", customerID));
+                // Add a reference to @productid
+                command.Parameters.Add(new SqlParameter("productid", productID));
 
                 // Run the command and read the results
                 using (SqlDataReader reader = command.ExecuteReader())
@@ -68,10 +72,21 @@ namespace IMAT2214_1819_502_Assignment_2
                     // If there are results then the date exists so change the boolean to true
                     if (reader.HasRows)
                     {
-                        // Store IDs in array
-                        int[] id = new int[] { Convert.ToInt32(reader["Time.id"]), Convert.ToInt32(reader["Customer.id"]), Convert.ToInt32(reader["Product.id"]) };
-                        // Return the id the reader retrieves from the database
-                        return Convert.ToInt32(reader["id"]);
+                        // If statement to if the time dimension has been selected
+                        if (dimension == "Time") {
+                            // Return time id
+                            return Convert.ToInt32(reader["Time.id"]);
+                        }
+                        else if (dimension == "Product")
+                        {
+                            // Return product id
+                            return Convert.ToInt32(reader["Product.id"]);
+                        }
+                        else if (dimension == "Customer")
+                        {
+                            // Return customer product
+                            return Convert.ToInt32(reader["Customer.id"]);
+                        }
                     }
                 }
             }
@@ -310,6 +325,62 @@ namespace IMAT2214_1819_502_Assignment_2
             }
         }
 
+        // Insert into fact table
+        private void insertFactTable(Int32 timeID, Int32 productID, Int32 customerID, Decimal sales, Int32 quantity, Decimal profit, Decimal discount)
+        {
+            // Create a connection to the MDF file
+            string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
+
+            // Create a boundary for the object to be used - Object will be destroyed at the end of te block
+            using (SqlConnection myConnection = new SqlConnection(connectionStringDestination))
+            {
+                // Open the SQL connection
+                myConnection.Open();
+                // Check if the product already exists in the database - NO DUPLICATES
+                SqlCommand command = new SqlCommand("SELECT timeId FROM FactTableAssignment WHERE timeId = @timeId", myConnection);
+                // Add a reference to @reference
+                command.Parameters.Add(new SqlParameter("timeId", timeID));
+
+                // Create a boolean variable and set it to false as default
+                Boolean exists = false;
+
+                // Run the command and read the results
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    // If there are results then the customer exists so change the boolean to true
+                    if (reader.HasRows) exists = true;
+                }
+
+                // if there are no rows 
+                if (exists == false)
+                {
+                    // SQL command to inset data into the product dimension table
+                    SqlCommand insertCommand = new SqlCommand(
+                        "INSERT INTO FactTableAssignment (productid, timeid, customerid, value, discount, profit, quantity)" +
+                        "VALUES (@productid, @timeid, @customerid, @value, @discount, @profit, @quantity)",
+                        myConnection);
+                    // Add a reference to @productid
+                    insertCommand.Parameters.Add(new SqlParameter("productid", productID));
+                    // Add a reference to @timeid
+                    insertCommand.Parameters.Add(new SqlParameter("timeid", timeID));
+                    // Add a reference to @customerid
+                    insertCommand.Parameters.Add(new SqlParameter("customerid", customerID));
+                    // Add a reference to @value
+                    insertCommand.Parameters.Add(new SqlParameter("value", sales));
+                    // Add a reference to @discount
+                    insertCommand.Parameters.Add(new SqlParameter("discount", discount));
+                    // Add a reference to @profit
+                    insertCommand.Parameters.Add(new SqlParameter("profit", profit));
+                    // Add a reference to @quantity
+                    insertCommand.Parameters.Add(new SqlParameter("quantity", quantity));
+
+                    // Insert the line 
+                    int recordAffected = insertCommand.ExecuteNonQuery();
+                    Console.WriteLine("Records Affected: " + recordAffected);
+                }
+            }
+        }
+
         // Activates when get data button is clicked
         private void btnGetData_Click(object sender, EventArgs e)
         {
@@ -444,8 +515,12 @@ namespace IMAT2214_1819_502_Assignment_2
         private void btnGetDestinationData_Click(object sender, EventArgs e)
         {
             // Time Dimension
-            // Create a list to store the dates data im
+            // Create a list to store the dates data in
             List<string> destinationDates = new List<string>();
+
+            // Customer Dimension
+            // Create a list to store the customer data in
+            List<string> destinationCustomer = new List<string>();
 
             // Product Dimension
             // Create a list to store the product data in
@@ -466,12 +541,9 @@ namespace IMAT2214_1819_502_Assignment_2
                 myConnection.Open();
 
                 // Time Dimension
+                // Query to get the data from the destination time table
                 SqlCommand datesCommand = new SqlCommand("SELECT id, dayName, dayNumber, monthName, monthNumber, weekNumber, year," +
                     "weekend, date, dayOfYear FROM Time", myConnection);
-
-                // Product Dimension
-                // Check if the product already exists in the destination database
-                SqlCommand ProductCommand = new SqlCommand("SELECT id, category, subcategory, name, reference FROM Product", myConnection);
 
                 // Create a boundary in which the reader can be used to read the data from the sql query
                 using (SqlDataReader reader = datesCommand.ExecuteReader())
@@ -506,9 +578,52 @@ namespace IMAT2214_1819_502_Assignment_2
                     // Else if there is no data
                     else
                     {
-                        destinationDates.Add("No data present in the product dimension");
+                        destinationDates.Add("No data present in the time dimension");
                     }
                 }
+
+                // Customer Dimension
+                // Query to get the data from the destination customer table
+                SqlCommand customerCommand = new SqlCommand("SELECT id, name, country, city, state, postalCode, region, reference FROM Customer", myConnection);
+
+                // Create a boundary in which the reader can be used to read the data from the sql query
+                using (SqlDataReader reader = customerCommand.ExecuteReader())
+                {
+                    // If there is data 
+                    if (reader.HasRows)
+                    {
+                        // Loop to read through the data
+                        while (reader.Read())
+                        {
+                            // Display data from the Customer table in the listbox
+                            string id = reader["id"].ToString();
+                            string name = reader["name"].ToString();
+                            string country = reader["country"].ToString();
+                            string city = reader["city"].ToString();
+                            string state = reader["state"].ToString();
+                            string postalCode = reader["postalCode"].ToString();
+                            string region = reader["region"].ToString();
+                            string reference = reader["reference"].ToString();
+
+                            // string to store data as detailed text
+                            string text = "ID : " + id + ", Name : " + name + ", Country : " + country +
+                                ", City : " + city + ", State : " + state +
+                                ", Postcode : " + postalCode + ", Region : " + region + ", Reference : " + reference;
+
+                            // Add text string to list
+                            destinationCustomer.Add(text);
+                        }
+                    }
+                    // Else if there is no data
+                    else
+                    {
+                        destinationCustomer.Add("No data present in the time dimension");
+                    }
+                }
+
+                // Product Dimension
+                // Query to get the data from the destination customer table
+                SqlCommand ProductCommand = new SqlCommand("SELECT id, category, subcategory, name, reference FROM Product", myConnection);
 
                 // Create a boundary in which the reader can be used to read the data from the sql query
                 using (SqlDataReader reader = ProductCommand.ExecuteReader())
@@ -545,12 +660,58 @@ namespace IMAT2214_1819_502_Assignment_2
             // Bind the listbox to list
             listBoxProductDestination.DataSource = DestinationProducts;
 
-            // Display list in console
+            // Display dates list in console
             foreach (string dates in destinationDates)
             {
                 Console.WriteLine(dates);
             }
 
+            // Display customer list in console
+            foreach (string customer in destinationCustomer)
+            {
+                Console.WriteLine(customer);
+            }
+
+        }
+
+        private void btnFactTable_Click(object sender, EventArgs e)
+        {
+            // Create database connection string
+            string connectionString = Properties.Settings.Default.Data_set_1ConnectionString;
+
+            using (OleDbConnection connection = new OleDbConnection(connectionString))
+            {
+                // Open the connection
+                connection.Open();
+                // Set reader to null
+                OleDbDataReader reader = null;
+                // Query to get all columns from sheet1 
+                OleDbCommand getData = new OleDbCommand("SELECT ID, [Row ID], [Order ID], [Ship Date], [Order Date], " +
+                    "[Ship Mode], [Customer ID], [Customer Name], Segment, Country, City, State, [Postal Code], " +
+                    "[Product ID], Region, Category, [Sub-Category], [Product Name], Sales, Quantity, Profit, " +
+                    "Discount FROM Sheet1", connection);
+
+                // Use reader to execute query
+                reader = getData.ExecuteReader();
+                // While the reader goes through the data
+                while (reader.Read()){
+                    // Get a line of data from the source
+
+                    // Get the numeric values
+                    Decimal sales = Convert.ToDecimal(reader["Sales"]);
+                    Int32 quantity = Convert.ToInt32(reader["quantity"]);
+                    Decimal profit = Convert.ToDecimal(reader["profit"]);
+                    Decimal discount = Convert.ToDecimal(reader["discount"]);
+
+                    // Get the dimension IDs
+                    Int32 timeID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Time");
+                    Int32 productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product");
+                    Int32 customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer");
+
+                    // Insert it into the database
+                    insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
+                }
+            }
         }
     }
 }
