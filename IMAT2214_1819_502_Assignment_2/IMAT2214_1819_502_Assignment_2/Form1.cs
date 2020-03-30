@@ -785,8 +785,8 @@ namespace IMAT2214_1819_502_Assignment_2
                     }
                     foreach (string fact in FactTableList)
                     {
-                        // insert only inserting one line and ids coming out as 0 !!!!!!!!!!!!!!!!!!
-                        //console.WriteLine(fact);
+                        // Display fact table
+                        Console.WriteLine(fact);
                     }
                 }
             }
