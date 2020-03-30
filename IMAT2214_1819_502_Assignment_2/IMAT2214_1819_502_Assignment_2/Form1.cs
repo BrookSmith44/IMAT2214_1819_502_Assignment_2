@@ -20,7 +20,7 @@ namespace IMAT2214_1819_502_Assignment_2
         }
 
         // Function to split day, month and year
-        private void splitDayMonthYear(string rawData)
+        static Tuple<Int32, Int32, Int32, DateTime, string> ReturnDayMonthYearData(String rawData)
         {
             // Array to collect the data from the parameter and enter it into local array
             string[] arrayDate = rawData.Split('/');
@@ -37,13 +37,22 @@ namespace IMAT2214_1819_502_Assignment_2
             // Convert this to a database friendly format
             string dbDate = myDate.ToString("M/dd/yyyy");
 
-            // Call function to split the dates
-            splitDates(myDate, dbDate, day, month, year);
+            return Tuple.Create<Int32, Int32, Int32, DateTime, string>(day, month, year, myDate, dbDate);
         }
 
         // Function to get the IDs for the dimensions
         private int getIDs(string date, string customerID, string productID, string dimension)
         {
+            // Remove the timestamp from the date
+            var dateSplit = date.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
+            // Set new date
+            date = dateSplit[0];
+            // Crate dimension string
+            Int32 dimensionID = 0;
+            // Store tuple method as result
+            Tuple<Int32, Int32, Int32, DateTime, String> result = ReturnDayMonthYearData(date);
+            // Store db compatible date as string
+            string dbDate = result.Item5;
             // Create a connection to the MDF file
             string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
 
@@ -53,14 +62,13 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Open the SQL connection
                 myConnection.Open();
                 // Check if the date already exists in the database - NO DUPLICATES
-                SqlCommand command = new SqlCommand("SELECT Time.id FROM Time WHERE Time.date = @date " +
-                    "UNION " +
-                    "SELECT Customer.id FROM Customer WHERE Customer.id = @customerid " +
-                    "UNION " +
-                    "SELECT Product.id FROM Product WHERE Product.id = @productid",
+                
+                SqlCommand command = new SqlCommand("SELECT DISTINCT c.id AS id_customer, p.id AS id_product, t.id AS id_time, t.date, c.reference, p.reference FROM Customer c, Product p, Time t " +
+                    "WHERE t.date = @date AND c.reference = @customerid AND p.reference = @productid",
                     myConnection);
+                //SqlCommand command = new SqlCommand("SELECT id FROM Time, Customer, Product WHERE date = @date", myConnection);
                 // Add a reference to @date
-                command.Parameters.Add(new SqlParameter("date", date));
+                command.Parameters.Add(new SqlParameter("date", dbDate));
                 // Add a reference to @customerid
                 command.Parameters.Add(new SqlParameter("customerid", customerID));
                 // Add a reference to @productid
@@ -72,32 +80,48 @@ namespace IMAT2214_1819_502_Assignment_2
                     // If there are results then the date exists so change the boolean to true
                     if (reader.HasRows)
                     {
-                        // If statement to if the time dimension has been selected
-                        if (dimension == "Time") {
-                            // Return time id
-                            return Convert.ToInt32(reader["Time.id"]);
-                        }
-                        else if (dimension == "Product")
+                        // Loop while the reads data
+                        while (reader.Read())
                         {
-                            // Return product id
-                            return Convert.ToInt32(reader["Product.id"]);
-                        }
-                        else if (dimension == "Customer")
-                        {
-                            // Return customer product
-                            return Convert.ToInt32(reader["Customer.id"]);
+                            //console.WriteLine("Time ID: " + reader["id_time"]);
+                            // If statement to if the time dimension has been selected
+                            if (dimension == "Time")
+                            {
+                                // Return time id
+                                dimensionID = Convert.ToInt32(reader["id_time"]);
+                            }
+                            else if (dimension == "Product")
+                            {
+                                // Return product id
+                                dimensionID = Convert.ToInt32(reader["id_product"]);
+                            }
+                            else if (dimension == "Customer")
+                            {
+                                // Return customer product
+                                dimensionID = Convert.ToInt32(reader["id_customer"]);
+                            }
                         }
                     }
                 }
             }
 
             // private int requires a return value
-            return 0;
+            return dimensionID;
         }
 
         // Function to split the dates
-        private void splitDates(DateTime myDate, string dbDate, Int32 day, Int32 month, Int32 year)
+        private void splitDates(string rawData)
         {
+
+            Tuple<Int32, Int32, Int32, DateTime, string> result = ReturnDayMonthYearData(rawData);
+            // int to store day
+            Int32 day = result.Item1;
+            // int to store month
+            Int32 month = result.Item2;
+            // int to store year
+            Int32 year = result.Item3;
+            // DateTime to store date
+            DateTime myDate = result.Item4;
             // String Variable to store the day of the week
             string dayOfWeek = myDate.DayOfWeek.ToString();
             // Integer variable to store the day of the year
@@ -110,6 +134,9 @@ namespace IMAT2214_1819_502_Assignment_2
             Boolean weekend = false;
             // If statement to check if it is the weekend
             if (dayOfWeek == "Saturday" || dayOfWeek == "Sunday") weekend = true;
+
+            // string to store database compatable date
+            string dbDate = result.Item5;
 
             // Execute function to insert data into the time dimension
             insertTimeDimension(dbDate, dayOfWeek, day, monthName, month, weekNumber, year, weekend, dayOfYear);
@@ -215,7 +242,7 @@ namespace IMAT2214_1819_502_Assignment_2
 
                     // Insert the line 
                     int recordAffected = insertCommand.ExecuteNonQuery();
-                    Console.WriteLine("Records Affected: " + recordAffected);
+                    //console.WriteLine("Records Affected: " + recordAffected);
                 }
             }
         }
@@ -271,7 +298,7 @@ namespace IMAT2214_1819_502_Assignment_2
 
                     // Insert the line 
                     int recordAffected = insertCommand.ExecuteNonQuery();
-                    Console.WriteLine("Records Affected: " + recordAffected);
+                    //console.WriteLine("Records Affected: " + recordAffected);
                 }
             }
         }
@@ -320,7 +347,7 @@ namespace IMAT2214_1819_502_Assignment_2
 
                     // Insert the line 
                     int recordAffected = insertCommand.ExecuteNonQuery();
-                    Console.WriteLine("Records Affected: " + recordAffected);
+                    //console.WriteLine("Records Affected: " + recordAffected);
                 }
             }
         }
@@ -376,7 +403,7 @@ namespace IMAT2214_1819_502_Assignment_2
 
                     // Insert the line 
                     int recordAffected = insertCommand.ExecuteNonQuery();
-                    Console.WriteLine("Records Affected: " + recordAffected);
+                    //console.WriteLine("Records Affected: " + recordAffected);
                 }
             }
         }
@@ -438,7 +465,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 foreach (string date in DatesFormatted)
                 {
                     // Call function to split the dates with the date as a parameter
-                    splitDayMonthYear(date);
+                    splitDates(date);
                 }
 
                 // Splitting the DatesFormatted into day, month and year
@@ -472,7 +499,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 foreach (string customer in Customers)
                 {
                     // Console to check how to split customer info
-                    Console.WriteLine(customer);
+                    //console.WriteLine(customer);
                     // Call to split customer function with customer as a parameter
                     splitCustomers(customer);
                 }
@@ -663,13 +690,13 @@ namespace IMAT2214_1819_502_Assignment_2
             // Display dates list in console
             foreach (string dates in destinationDates)
             {
-                Console.WriteLine(dates);
+                //console.WriteLine(dates);
             }
 
             // Display customer list in console
             foreach (string customer in destinationCustomer)
             {
-                Console.WriteLine(customer);
+                //console.WriteLine(customer);
             }
 
         }
@@ -694,7 +721,8 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Use reader to execute query
                 reader = getData.ExecuteReader();
                 // While the reader goes through the data
-                while (reader.Read()){
+                while (reader.Read())
+                {
                     // Get a line of data from the source
 
                     // Get the numeric values
@@ -707,9 +735,59 @@ namespace IMAT2214_1819_502_Assignment_2
                     Int32 timeID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Time");
                     Int32 productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product");
                     Int32 customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer");
-
+                    
                     // Insert it into the database
                     insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
+                }
+            }
+            // Build table
+            // Create List to store the data in
+            List<String> FactTableList = new List<string>();
+
+            // Create connection to the MDF file
+            string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
+
+            using (SqlConnection myConnection = new SqlConnection(connectionStringDestination))
+            {
+                // Open the connnection
+                myConnection.Open();
+                // Check if the date already exists in the database
+                SqlCommand command = new SqlCommand("SELECT productId, timeId, customerId, value, discount, profit, quantity FROM FactTableAssignment", myConnection);
+
+
+
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    // Check if there is data in the table
+                    if (reader.HasRows)
+                    {
+                        // Retrieve the data
+                        while (reader.Read())
+                        {
+                            string productid = reader["productId"].ToString();
+                            string timeid = reader["timeId"].ToString();
+                            string customerid = reader["customerId"].ToString();
+                            string value = reader["value"].ToString();
+                            string discount = reader["discount"].ToString();
+                            string profit = reader["profit"].ToString();
+                            string quantity = reader["quantity"].ToString();
+
+                            string text;
+
+                            text = "Product ID: " + productid + " Customer ID: " + customerid + " Time ID: " + timeid + " Value: " + value + " Discount: " + discount + " Proft: " + profit + " Quantity: " + quantity; ;
+
+                            FactTableList.Add(text);
+                        }
+                    }
+                    else // If there is no data available
+                    {
+                        FactTableList.Add("No Data available in the time dimension");
+                    }
+                    foreach (string fact in FactTableList)
+                    {
+                        // insert only inserting one line and ids coming out as 0 !!!!!!!!!!!!!!!!!!
+                        //console.WriteLine(fact);
+                    }
                 }
             }
         }
