@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
 
 namespace IMAT2214_1819_502_Assignment_2
 {
@@ -17,6 +18,30 @@ namespace IMAT2214_1819_502_Assignment_2
         public Form1()
         {
             InitializeComponent();
+        }
+
+        // Appearance buttons
+        // Button to close the program
+        private void btnClose_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+        // Button to maximise application
+        private void btnMaximise_Click(object sender, EventArgs e)
+        {
+            if (WindowState == FormWindowState.Normal)
+            {
+                WindowState = FormWindowState.Maximized;
+            }
+            else
+            {
+                WindowState = FormWindowState.Normal;
+            }
+        }
+        // Button to minimize application
+        private void btnMinimize_Click(object sender, EventArgs e)
+        {
+            WindowState = FormWindowState.Minimized;
         }
 
         // Function to split day, month and year
@@ -66,6 +91,8 @@ namespace IMAT2214_1819_502_Assignment_2
                 SqlCommand command = new SqlCommand("SELECT DISTINCT c.id AS id_customer, p.id AS id_product, t.id AS id_time, t.date, c.reference, p.reference FROM Customer c, Product p, Time t " +
                     "WHERE t.date = @date AND c.reference = @customerid AND p.reference = @productid",
                     myConnection);
+
+                SqlCommand command2 = new SqlCommand("SELECT COUNT(*) FROM Customer", myConnection);
                 //SqlCommand command = new SqlCommand("SELECT id FROM Time, Customer, Product WHERE date = @date", myConnection);
                 // Add a reference to @date
                 command.Parameters.Add(new SqlParameter("date", dbDate));
@@ -172,7 +199,7 @@ namespace IMAT2214_1819_502_Assignment_2
         private void splitProducts(string rawData)
         {
             // Array to collect the data from the products list, split by the slashes between
-            string[] arrayProduct = rawData.Split('/');
+            string[] arrayProduct = rawData.Split('~');
 
             // String to store the product id as reference
             string reference = arrayProduct[0];
@@ -235,7 +262,7 @@ namespace IMAT2214_1819_502_Assignment_2
                     insertCommand.Parameters.Add(new SqlParameter("year", year));
                     // Add a reference to @weekend
                     insertCommand.Parameters.Add(new SqlParameter("weekend", weekend));
-                    // Add a reference to @date
+                    // Add a reference to @dates
                     insertCommand.Parameters.Add(new SqlParameter("date", date));
                     // Add a reference to @dayOfYear
                     insertCommand.Parameters.Add(new SqlParameter("dayOfYear", dayOfYear));
@@ -400,10 +427,10 @@ namespace IMAT2214_1819_502_Assignment_2
                     insertCommand.Parameters.Add(new SqlParameter("profit", profit));
                     // Add a reference to @quantity
                     insertCommand.Parameters.Add(new SqlParameter("quantity", quantity));
-
+                    
                     // Insert the line 
                     int recordAffected = insertCommand.ExecuteNonQuery();
-                    //console.WriteLine("Records Affected: " + recordAffected);
+                    //Console.WriteLine("Fact table Records Affected: " + recordAffected);
                 }
             }
         }
@@ -420,6 +447,16 @@ namespace IMAT2214_1819_502_Assignment_2
 
             // Create list for the customer info to be collected in
             List<string> Products = new List<string>();
+
+            // Set the datasource to null to stop program from crashing
+            listBoxTimeDimension.DataSource = null;
+            // Clear listbox to make sure there is no old data there
+            listBoxTimeDimension.Items.Clear();
+
+            // Set the datasource to null to stop program from crashing
+            listBoxProductDestination.DataSource = null;
+            // Clear listbox to make sure there is no old data there
+            listBoxProductDestination.Items.Clear();
 
             // Create the database string
             string connectionString = Properties.Settings.Default.Data_set_1ConnectionString;
@@ -460,6 +497,9 @@ namespace IMAT2214_1819_502_Assignment_2
                     // Add new split date to new DatesFormatted List
                     DatesFormatted.Add(dates[0]);
                 }
+
+                // Bind list to listbox
+                listBoxTimeDimension.DataSource = DatesFormatted;
 
                 // For each loop goes through each date in DatesFormatted list
                 foreach (string date in DatesFormatted)
@@ -503,6 +543,10 @@ namespace IMAT2214_1819_502_Assignment_2
                     // Call to split customer function with customer as a parameter
                     splitCustomers(customer);
                 }
+
+                // Bind list to customer listbox
+                listBoxCustomerDimension.DataSource = Customers;
+
                 // Product Dimension = Get Product info from data set
 
                 // Query to get all the relevatn customer info from the data set
@@ -515,9 +559,9 @@ namespace IMAT2214_1819_502_Assignment_2
                 while (reader.Read())
                 {
                     // Add the products found in the query by the reader into a string
-                    Products.Add(reader[0].ToString() + "/" +
-                        reader[1].ToString() + "/" +
-                        reader[2].ToString() + "/" +
+                    Products.Add(reader[0].ToString() + "~" +
+                        reader[1].ToString() + "~" +
+                        reader[2].ToString() + "~" +
                         reader[3].ToString());
                 }
 
@@ -527,14 +571,8 @@ namespace IMAT2214_1819_502_Assignment_2
                     splitProducts(product);
                 }
 
-                // Display the populated Dates list in the console window
-                //DatesFormatted.ForEach(Console.WriteLine);
-
-                // Display the populated Customer list in the console window
-                //Customers.ForEach(Console.WriteLine);
-
-                // Display the populated Products list in the console window
-                //Products.ForEach(Console.WriteLine);
+                // Bind the listbox to list
+                listBoxProductDestination.DataSource = Products;
 
             }
         }
@@ -552,11 +590,6 @@ namespace IMAT2214_1819_502_Assignment_2
             // Product Dimension
             // Create a list to store the product data in
             List<string> DestinationProducts = new List<string>();
-
-            // Set the datasource to null to stop program from crashing
-            listBoxProductDestination.DataSource = null;
-            // Clear listbox to make sure there is no old data there
-            listBoxProductDestination.Items.Clear();
 
             // Create a connection to MDF File
             string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
@@ -589,14 +622,14 @@ namespace IMAT2214_1819_502_Assignment_2
                             string monthNumber = reader["monthNumber"].ToString();
                             string year = reader["year"].ToString();
                             string weekend = reader["weekend"].ToString();
-                            string date = reader["date"].ToString();
+                            string date = Convert.ToDateTime(reader["date"]).ToString("M/dd/yyyy");
                             string dayOfYear = reader["dayOfYear"].ToString();
 
                             // string to store data as detailed text
-                            string text = "ID: " + id + ", Day Name: " + dayName + ", Day Number: " + dayNumber +
-                                ", Month Name: " + monthName + ", Month Number: " + monthNumber +
-                                ", Year: " + year + ", Weekend: " + weekend + ", Date: " + date +
-                                ", Day of the Year: " + dayOfYear;
+                            string text = id + " : " + dayName + " : " + dayNumber +
+                                " : " + monthName + " : " + monthNumber +
+                                " : " + year + " : " + weekend + " : " + date +
+                                " : " + dayOfYear;
 
                             // Add text string to list
                             destinationDates.Add(text);
@@ -607,6 +640,27 @@ namespace IMAT2214_1819_502_Assignment_2
                     {
                         destinationDates.Add("No data present in the time dimension");
                     }
+                }
+
+                // Insert list into datatable 
+                // Create array for column headers
+                string[] timeColumnHeaders = { "ID", "Day Name", "Day Number", "Month Name", "Month Number", 
+                                                "Year", "Weekend", "Date", "Day of the Year" };
+
+                // Call convert list to datatable function
+                DataTable timeTable = ConvertListToDataTable(destinationDates, timeColumnHeaders);
+                // Bind datatable to datagrid
+                dataGridViewTime.DataSource = timeTable;
+
+                // Create array for text split
+                string[] timeArray = { };
+
+                // Add rows to the datatable
+                foreach (string row in destinationDates)
+                {
+                    timeArray = row.Split(':');
+                    timeTable.Rows.Add(new Object[] { timeArray[0], timeArray[1], timeArray[2], timeArray[3], timeArray[4],
+                    timeArray[5], timeArray[6], timeArray[7], timeArray[8]});
                 }
 
                 // Customer Dimension
@@ -633,9 +687,9 @@ namespace IMAT2214_1819_502_Assignment_2
                             string reference = reader["reference"].ToString();
 
                             // string to store data as detailed text
-                            string text = "ID : " + id + ", Name : " + name + ", Country : " + country +
-                                ", City : " + city + ", State : " + state +
-                                ", Postcode : " + postalCode + ", Region : " + region + ", Reference : " + reference;
+                            string text =  id + " : " + name + " : " + country +
+                                " : " + city + " : " + state +
+                                " : " + postalCode + " : " + region + " : " + reference;
 
                             // Add text string to list
                             destinationCustomer.Add(text);
@@ -646,6 +700,19 @@ namespace IMAT2214_1819_502_Assignment_2
                     {
                         destinationCustomer.Add("No data present in the time dimension");
                     }
+                }
+
+                // Insert List into DataTable
+                string[] customerColumnNames = { "ID", "Name", "Country", "City", "State", "Post Code", "Region", "Referemce" };
+                DataTable customerTable = ConvertListToDataTable(destinationCustomer, customerColumnNames);
+                dataGridCustomer.DataSource = customerTable;
+
+                // For each loop to go through all customer info
+                string[] customerArray = { };
+                foreach (string customer in destinationCustomer)
+                {
+                    customerArray = customer.Split(':');
+                    customerTable.Rows.Add(new Object[] { customerArray[0], customerArray[1], customerArray[2], customerArray[3], customerArray[4], customerArray[5], customerArray[6], customerArray[7] });
                 }
 
                 // Product Dimension
@@ -669,8 +736,8 @@ namespace IMAT2214_1819_502_Assignment_2
                             string reference = reader["reference"].ToString();
 
                             // string to store data as detailed text
-                            string text = "ID: " + id + ", Category: " + category + ", Subcategory: " + 
-                                ", Name: " + name + ", Reference: " + reference ;
+                            string text = id + " : " + category + " : " + subcategory +
+                                " : " + name + " : " + reference ;
 
                             // Add text string to list
                             DestinationProducts.Add(text);
@@ -684,21 +751,18 @@ namespace IMAT2214_1819_502_Assignment_2
                 }
             }
 
-            // Bind the listbox to list
-            listBoxProductDestination.DataSource = DestinationProducts;
-
-            // Display dates list in console
-            foreach (string dates in destinationDates)
+            // Insert List into DataTable
+            string[] productColumnNames = { "ID", "Category", "Subcategory", "Product Name", "Reference" };
+            DataTable productTable = ConvertListToDataTable(DestinationProducts, productColumnNames);
+            dataGridProduct.DataSource = productTable;
+            
+            // For each loop to go through all product info
+            string[] productArray = { };
+            foreach (string product in DestinationProducts)
             {
-                //console.WriteLine(dates);
+                productArray = product.Split(':');
+                productTable.Rows.Add(new Object[] { productArray[0], productArray[1], productArray[2], productArray[3], productArray[4] });
             }
-
-            // Display customer list in console
-            foreach (string customer in destinationCustomer)
-            {
-                //console.WriteLine(customer);
-            }
-
         }
 
         private void btnFactTable_Click(object sender, EventArgs e)
@@ -735,6 +799,8 @@ namespace IMAT2214_1819_502_Assignment_2
                     Int32 timeID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Time");
                     Int32 productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product");
                     Int32 customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer");
+                    
+                    //Console.WriteLine(timeID + "    " + productID + "   " + customerID);
                     
                     // Insert it into the database
                     insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
@@ -774,7 +840,7 @@ namespace IMAT2214_1819_502_Assignment_2
 
                             string text;
 
-                            text = "Product ID: " + productid + " Customer ID: " + customerid + " Time ID: " + timeid + " Value: " + value + " Discount: " + discount + " Proft: " + profit + " Quantity: " + quantity; ;
+                            text =  productid + " : " + customerid + " : " + timeid + " : " + value + " : " + discount + " : " + profit + " : " + quantity; ;
 
                             FactTableList.Add(text);
                         }
@@ -783,13 +849,72 @@ namespace IMAT2214_1819_502_Assignment_2
                     {
                         FactTableList.Add("No Data available in the time dimension");
                     }
+
+
+                    // Insert List into DataTable
+                    string[] factColumnNames = { "Product ID", "Customer ID", "Time ID", "Value", "Discount", "Profit", "Quantty" };
+                    DataTable factTable = ConvertListToDataTable(FactTableList, factColumnNames);
+                    dataGridFactTable.DataSource = factTable;
+
+                    // For each loop to go through all product info
+                    string[] factArray = { };
                     foreach (string fact in FactTableList)
                     {
-                        // Display fact table
-                        Console.WriteLine(fact);
+                        factArray = fact.Split(':');
+                        factTable.Rows.Add(new Object[] { factArray[0], factArray[1], factArray[2], factArray[3], factArray[4], factArray[5], factArray[6] });
                     }
                 }
             }
         }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+        static DataTable ConvertListToDataTable(List<string> list, string[] columnNames)
+        {
+
+            string[] array = { };
+            // For each loop to go through all product info
+            foreach (string product in list)
+            {
+                array = product.Split(':');
+            }
+
+            // Create new table
+            DataTable table = new DataTable();
+
+            // Get MAX columns
+            int columns = array.Length;
+
+            // Add columns
+            // Loop through the amount of columns
+            for (int i = 0; i < columns; i++)
+            {
+                table.Columns.Add(columnNames[i]);
+            }
+
+            // Return variable
+            return table;
+        }
+
+        //https://stackoverflow.com/questions/11379209/how-do-i-make-mousedrag-inside-panel-move-form-window
+        public const int WM_NCLBUTTONDOWN = 0xA1;
+        public const int HT_CAPTION = 0x2;
+
+        [DllImportAttribute("user32.dll")]
+        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+        [DllImportAttribute("user32.dll")]
+        public static extern bool ReleaseCapture();
+
+        private void panel1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                ReleaseCapture();
+                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
+            }
+        }
     }
 }
+
