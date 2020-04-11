@@ -21,6 +21,25 @@ namespace IMAT2214_1819_502_Assignment_2
         }
 
         // Appearance buttons
+
+        // Move form by panel
+        //https://stackoverflow.com/questions/11379209/how-do-i-make-mousedrag-inside-panel-move-form-window
+        public const int WM_NCLBUTTONDOWN = 0xA1;
+        public const int HT_CAPTION = 0x2;
+
+        [DllImportAttribute("user32.dll")]
+        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+        [DllImportAttribute("user32.dll")]
+        public static extern bool ReleaseCapture();
+
+        private void panel1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+            {
+                ReleaseCapture();
+                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
+            }
+        }
         // Button to close the program
         private void btnClose_Click(object sender, EventArgs e)
         {
@@ -852,7 +871,7 @@ namespace IMAT2214_1819_502_Assignment_2
 
 
                     // Insert List into DataTable
-                    string[] factColumnNames = { "Product ID", "Customer ID", "Time ID", "Value", "Discount", "Profit", "Quantty" };
+                    string[] factColumnNames = { "Product ID", "Customer ID", "Time ID", "Value", "Discount", "Profit", "Quantity" };
                     DataTable factTable = ConvertListToDataTable(FactTableList, factColumnNames);
                     dataGridFactTable.DataSource = factTable;
 
@@ -896,24 +915,6 @@ namespace IMAT2214_1819_502_Assignment_2
 
             // Return variable
             return table;
-        }
-
-        //https://stackoverflow.com/questions/11379209/how-do-i-make-mousedrag-inside-panel-move-form-window
-        public const int WM_NCLBUTTONDOWN = 0xA1;
-        public const int HT_CAPTION = 0x2;
-
-        [DllImportAttribute("user32.dll")]
-        public static extern int SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
-        [DllImportAttribute("user32.dll")]
-        public static extern bool ReleaseCapture();
-
-        private void panel1_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left)
-            {
-                ReleaseCapture();
-                SendMessage(Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
-            }
         }
     }
 }
