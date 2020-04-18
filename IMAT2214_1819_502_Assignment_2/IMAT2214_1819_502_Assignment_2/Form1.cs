@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using System.Windows.Forms.DataVisualization.Charting;
 
 namespace IMAT2214_1819_502_Assignment_2
 {
@@ -63,6 +64,30 @@ namespace IMAT2214_1819_502_Assignment_2
             WindowState = FormWindowState.Minimized;
         }
 
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            // Combo boxes
+            // Set combo box items for time sales selection
+            comboBoxTimeSales.Items.AddRange(new Object[] { "Weeks", "Months", "Years" });
+            comboBoxTimeSales.SelectedItem = "Weeks";
+
+            // Set combo box items for time profit selection
+            comboBoxTimeProfit.Items.AddRange(new Object[] { "Days", "Weeks", "Months", "Years" });
+            comboBoxTimeProfit.SelectedItem = "Days";
+
+            // Set combo box items for time quantity selection
+            comboBoxTimeQuantity.Items.AddRange(new Object[] { "Days", "Weeks", "Months", "Years" });
+            comboBoxTimeQuantity.SelectedItem = "Days";
+
+            // Set combo box items for time value selection
+            comboBoxTimeValue.Items.AddRange(new Object[] { "Days", "Weeks", "Months", "Years" });
+            comboBoxTimeValue.SelectedItem = "Days";
+
+            // Set combo box items for time discount selection
+            comboBoxTimeDiscount.Items.AddRange(new Object[] { "Days", "Weeks", "Months", "Years" });
+            comboBoxTimeDiscount.SelectedItem = "Days";
+        }
+
         // Function to split day, month and year
         static Tuple<Int32, Int32, Int32, DateTime, string> ReturnDayMonthYearData(String rawData)
         {
@@ -82,6 +107,59 @@ namespace IMAT2214_1819_502_Assignment_2
             string dbDate = myDate.ToString("M/dd/yyyy");
 
             return Tuple.Create<Int32, Int32, Int32, DateTime, string>(day, month, year, myDate, dbDate);
+        }
+
+        private void DisplayGraphs(string connectionString, string SQLstring, List<string> list, Dictionary<string, dynamic> fact, Chart chart, string value)
+        {
+                // loop through dates list
+                foreach (string listItem in list)
+                {
+                    //  Create space to access the database
+                    using (SqlConnection connection = new SqlConnection(connectionString))
+                    {
+                        // Open the connection
+                        connection.Open();
+
+                        SqlCommand command = new SqlCommand(SQLstring, connection);
+                        // Set parameter for @date
+                        command.Parameters.Add(new SqlParameter("@selection", listItem));
+
+                        // Create reader to read the database data
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            // Check the query returns data
+                            if (reader.HasRows)
+                            {
+                                // Get the data
+                                while (reader.Read())
+                                {
+                                    if (value == "sales" || value =="quantity")
+                                    {
+                                        // Add the sales count to the date
+                                        fact.Add(listItem, Int32.Parse(reader[0].ToString()));
+                                    }
+                                    if (value == "profit" || value == "value" || value == "discount")
+                                    {
+                                        fact.Add(listItem, Decimal.Parse(reader[0].ToString()));
+                                        Console.WriteLine(reader[0].ToString());
+                                    }
+                                }
+                            }
+                            // If no data is returned
+                            else
+                            {
+                                // Add 0 sales to date
+                                fact.Add(listItem, 0);
+                            }
+                        }
+                    }
+                }
+
+                // Building the chart
+                chart.DataSource = fact;
+                chart.Series[0].XValueMember = "Key";
+                chart.Series[0].YValueMembers = "Value";
+                chart.DataBind();
         }
 
         // Function to get the IDs for the dimensions
@@ -153,8 +231,8 @@ namespace IMAT2214_1819_502_Assignment_2
 
             // private int requires a return value
             return dimensionID;
-        }
-
+        } 
+ 
         // Function to split the dates
         private void splitDates(string rawData)
         {
@@ -633,12 +711,13 @@ namespace IMAT2214_1819_502_Assignment_2
                         // Loop to read through the data
                         while (reader.Read())
                         {
-                            // Display data from the Time table in the listbox
+                            // Display data from the Time table in the datatable
                             string id = reader["id"].ToString();
                             string dayName = reader["dayName"].ToString();
                             string dayNumber = reader["dayNumber"].ToString();
                             string monthName = reader["monthName"].ToString();
                             string monthNumber = reader["monthNumber"].ToString();
+                            string weekNumber = reader["weekNumber"].ToString();
                             string year = reader["year"].ToString();
                             string weekend = reader["weekend"].ToString();
                             string date = Convert.ToDateTime(reader["date"]).ToString("M/dd/yyyy");
@@ -646,7 +725,7 @@ namespace IMAT2214_1819_502_Assignment_2
 
                             // string to store data as detailed text
                             string text = id + " : " + dayName + " : " + dayNumber +
-                                " : " + monthName + " : " + monthNumber +
+                                " : " + monthName + " : " + monthNumber + " : " + weekNumber +
                                 " : " + year + " : " + weekend + " : " + date +
                                 " : " + dayOfYear;
 
@@ -657,14 +736,14 @@ namespace IMAT2214_1819_502_Assignment_2
                     // Else if there is no data
                     else
                     {
-                        destinationDates.Add("No data present in the time dimension");
+                        destinationDates.Add("No Data available");
                     }
                 }
 
                 // Insert list into datatable 
                 // Create array for column headers
                 string[] timeColumnHeaders = { "ID", "Day Name", "Day Number", "Month Name", "Month Number", 
-                                                "Year", "Weekend", "Date", "Day of the Year" };
+                                                "Week Number", "Year", "Weekend", "Date", "Day of the Year" };
 
                 // Call convert list to datatable function
                 DataTable timeTable = ConvertListToDataTable(destinationDates, timeColumnHeaders);
@@ -679,7 +758,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 {
                     timeArray = row.Split(':');
                     timeTable.Rows.Add(new Object[] { timeArray[0], timeArray[1], timeArray[2], timeArray[3], timeArray[4],
-                    timeArray[5], timeArray[6], timeArray[7], timeArray[8]});
+                    timeArray[5], timeArray[6], timeArray[7], timeArray[8], timeArray[9]});
                 }
 
                 // Customer Dimension
@@ -695,7 +774,7 @@ namespace IMAT2214_1819_502_Assignment_2
                         // Loop to read through the data
                         while (reader.Read())
                         {
-                            // Display data from the Customer table in the listbox
+                            // Display data from the Customer table in the datatable
                             string id = reader["id"].ToString();
                             string name = reader["name"].ToString();
                             string country = reader["country"].ToString();
@@ -717,7 +796,7 @@ namespace IMAT2214_1819_502_Assignment_2
                     // Else if there is no data
                     else
                     {
-                        destinationCustomer.Add("No data present in the time dimension");
+                        destinationCustomer.Add("No Data available");
                     }
                 }
 
@@ -747,7 +826,7 @@ namespace IMAT2214_1819_502_Assignment_2
                         // Loop to read through the data
                         while(reader.Read())
                         {
-                            // Display data from the Product tabke in the listbox
+                            // Display data from the Product tabke in the datatable
                             string id = reader["id"].ToString();
                             string category = reader["category"].ToString();
                             string subcategory = reader["subcategory"].ToString();
@@ -765,7 +844,7 @@ namespace IMAT2214_1819_502_Assignment_2
                     // Else if there is no data
                     else
                     {
-                        DestinationProducts.Add("No data present in the product dimension");
+                        DestinationProducts.Add("No Data available");
                     }
                 }
             }
@@ -818,13 +897,14 @@ namespace IMAT2214_1819_502_Assignment_2
                     Int32 timeID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Time");
                     Int32 productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product");
                     Int32 customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer");
-                    
+
                     //Console.WriteLine(timeID + "    " + productID + "   " + customerID);
-                    
+
                     // Insert it into the database
                     insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
                 }
             }
+
             // Build table
             // Create List to store the data in
             List<String> FactTableList = new List<string>();
@@ -866,7 +946,7 @@ namespace IMAT2214_1819_502_Assignment_2
                     }
                     else // If there is no data available
                     {
-                        FactTableList.Add("No Data available in the time dimension");
+                        FactTableList.Add("No Data available");
                     }
 
 
@@ -880,15 +960,17 @@ namespace IMAT2214_1819_502_Assignment_2
                     foreach (string fact in FactTableList)
                     {
                         factArray = fact.Split(':');
-                        factTable.Rows.Add(new Object[] { factArray[0], factArray[1], factArray[2], factArray[3], factArray[4], factArray[5], factArray[6] });
+                        if (!factArray.Contains("No Data available"))
+                        {
+                            factTable.Rows.Add(new Object[] { factArray[0], factArray[1], factArray[2], factArray[3], factArray[4], factArray[5], factArray[6] });
+                        }
+                        else
+                        {
+                            factTable.Rows.Add(new Object[] { factArray[0] });
+                        }
                     }
                 }
             }
-        }
-
-        private void Form1_Load(object sender, EventArgs e)
-        {
-
         }
         static DataTable ConvertListToDataTable(List<string> list, string[] columnNames)
         {
@@ -915,6 +997,341 @@ namespace IMAT2214_1819_502_Assignment_2
 
             // Return variable
             return table;
+        }
+
+        // Time Dimension
+        private void btnLoadTimeData_Click(object sender, EventArgs e)
+        {
+            // Create dictionaries
+            // Create a empty dictionary to store the destination data for sales
+            Dictionary<String, dynamic> salesCount = new Dictionary<String, dynamic>();
+
+            // Create an empty dictionary to store the destination data for profit
+            Dictionary<String, dynamic> profit = new Dictionary<String, dynamic>();
+
+            // Create an empty dictionary to store destination data for quantity
+            Dictionary<String, dynamic> quantity = new Dictionary<String, dynamic>();
+
+            // Create an empty dictionary to store the destination data for value
+            Dictionary<String, dynamic> value = new Dictionary<String, dynamic>();
+
+            // Create an empty dictionary to store the destination data for discount
+            Dictionary<String, dynamic> discount = new Dictionary<String, dynamic>();
+
+            // Create list for dates
+            List<string> datesList = new List<string>();
+
+            // Create a new list for the week numbers
+            List<string> weekList = new List<String>();
+
+            // For loop to add all the weeks in a year
+            for (int i = 0; i < 53; i++)
+            {
+                weekList.Add(i.ToString());
+            }
+
+            // Create list for months in a yea
+            List<String> monthList = new List<string> { "January", "Febuary", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" };
+
+            // Create list for years
+            List<String> yearList = new List<string>();
+
+
+            // Create a connection to the MDF file 
+            String connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
+
+            // Populate year list
+            using (SqlConnection connection = new SqlConnection(connectionStringDestination))
+            {
+                // Open the connection
+                connection.Open();
+
+                // Sql query to get the latest year from time table
+                SqlCommand command = new SqlCommand("SELECT MAX(year) FROM Time", connection);
+
+                // Create reader
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    // Check the query returns results
+                    if (reader.HasRows)
+                    {
+                        // While the reader gets the data
+                        while (reader.Read())
+                        {
+                            // Get last 10 years from latest year
+                            Int32 maxYear = Convert.ToInt32(reader[0]);
+                            for (int i = maxYear - 10; i <= maxYear; i++)
+                            {
+                                // Add year to list
+                                yearList.Add(Convert.ToString(i));
+                            }
+                        }
+                    }
+                }
+                // Get dates from time dimension
+                // Sql query to get the latest year from time table
+                SqlCommand command2 = new SqlCommand("SELECT date FROM Time", connection);
+
+                // Create reader
+                using (SqlDataReader reader2 = command2.ExecuteReader())
+                {
+                    // Check the query returns results
+                    if (reader2.HasRows)
+                    {
+                        // While the reader gets the data
+                        while (reader2.Read())
+                        {
+                            datesList.Add(reader2[0].ToString());
+                        }
+                    }
+                }
+            }
+
+            // Create list for formatted dates
+            List<string> formattedDates = new List<string>();
+
+            foreach (string date in datesList)
+            {
+                var dates = date.Split(new Char[0], StringSplitOptions.RemoveEmptyEntries);
+                formattedDates.Add(dates[0]);
+            }
+
+            // Create list for formatted dates
+            List<string> dbDates = new List<string>();
+
+            foreach (string  date in formattedDates)
+            {
+                // Store tuple method as result
+                Tuple<Int32, Int32, Int32, DateTime, String> result = ReturnDayMonthYearData(date);
+                // Store db compatible date as string
+                string dbDate = result.Item5;
+
+                dbDates.Add(dbDate);
+            }
+
+            // Sales
+
+            // If user selects weeks for sales
+            if (comboBoxTimeSales.Text == "Weeks")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COUNT(*) as SalesCount FROM FactTableAssignment " +
+                                                    "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.WeekNumber = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, weekList, salesCount, chartTimeSales, "sales");
+            }
+
+            // If the user has selected months for sales
+            else if (comboBoxTimeSales.Text == "Months")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COUNT(*) as SalesCount FROM FactTableAssignment " +
+                                                    "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.monthName = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, monthList, salesCount, chartTimeSales, "sales");
+            }
+
+            // If the user has selected years for sales
+            else if (comboBoxTimeSales.Text == "Years")
+            {
+               // Sql string to pass to display grapth method
+               string SQLstring = "SELECT COUNT(*) as SalesCount FROM FactTableAssignment " +
+                                                        "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.year = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, yearList, salesCount, chartTimeSales, "sales");
+            }
+
+            // Profit
+
+            // If the user has selected Days for profit
+            if (comboBoxTimeProfit.Text == "Days")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT profit FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.Date = @selection";
+                
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, dbDates, profit, chartTimeProfit, "profit");
+            }
+
+            // If the user has selected weeks for profit
+            else if (comboBoxTimeProfit.Text == "Weeks")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(profit), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.weekNumber = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, weekList, profit, chartTimeProfit, "profit");
+            }
+
+            // If the user has selected months for profit
+            else if (comboBoxTimeProfit.Text == "Months")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(profit), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.monthName = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, monthList , profit, chartTimeProfit, "profit");
+            }
+
+            // If the user has selected years for profit
+            else if (comboBoxTimeProfit.Text == "Years")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(profit), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.year = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, yearList, profit, chartTimeProfit, "profit");
+            }
+
+            // Quantity
+
+            // If the user has selected Days for Quantity
+            if (comboBoxTimeQuantity.Text == "Days")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT quantity FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.Date = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, dbDates, quantity, chartTimeQuantity, "quantity");
+            }
+
+            // If the user has selected weeks for Quantity
+            else if (comboBoxTimeQuantity.Text == "Weeks")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(quantity), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.weekNumber = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, weekList, quantity, chartTimeQuantity, "quantity");
+            }
+
+            // If the user has selected months for Quantity
+            else if (comboBoxTimeQuantity.Text == "Months")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(quantity), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.monthName = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, monthList, quantity, chartTimeQuantity, "quantity");
+            }
+
+            // If the user has selected years for Quantity
+            else if (comboBoxTimeQuantity.Text == "Years")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(quantity), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.year = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, yearList, quantity, chartTimeQuantity, "quantity");
+            }
+
+            // Value
+
+            // If the user has selected Days for Value
+            if (comboBoxTimeValue.Text == "Days")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT value FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.Date = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, dbDates, value, chartTimeValue, "value");
+            }
+
+            // If the user has selected weeks for Value
+            else if (comboBoxTimeValue.Text == "Weeks")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(value), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.weekNumber = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, weekList, value, chartTimeValue, "value");
+            }
+
+            // If the user has selected months for Value
+            else if (comboBoxTimeValue.Text == "Months")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(value), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.monthName = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, monthList, value, chartTimeValue, "value");
+            }
+
+            // If the user has selected years for Value
+            else if (comboBoxTimeValue.Text == "Years")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(value), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.year = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, yearList, value, chartTimeValue, "value");
+            }
+
+            // Discount
+
+            // If the user has selected Days for Discount
+            if (comboBoxTimeDiscount.Text == "Days")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT discount FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.Date = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, dbDates, discount, chartTimeDiscount, "discount");
+            }
+
+            // If the user has selected weeks for Discount
+            else if (comboBoxTimeDiscount.Text == "Weeks")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(discount), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.weekNumber = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, weekList, discount, chartTimeDiscount, "discount");
+            }
+
+            // If the user has selected months for Discount
+            else if (comboBoxTimeDiscount.Text == "Months")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(discount), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.monthName = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, monthList, discount, chartTimeDiscount, "discount");
+            }
+
+            // If the user has selected years for Discount
+            else if (comboBoxTimeDiscount.Text == "Years")
+            {
+                // Sql string to pass to display grapth method
+                string SQLstring = "SELECT COALESCE(SUM(discount), 0) FROM FactTableAssignment " +
+                                                         "JOIN Time ON FactTableAssignment.timeId = Time.id WHERE Time.year = @selection";
+
+                // Call method
+                DisplayGraphs(connectionStringDestination, SQLstring, yearList, discount, chartTimeDiscount, "discount");
+            }
+        }
+
+        private void btnLoadCustomerData_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
