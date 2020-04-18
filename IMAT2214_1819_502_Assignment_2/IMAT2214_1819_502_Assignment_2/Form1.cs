@@ -67,6 +67,7 @@ namespace IMAT2214_1819_502_Assignment_2
         private void Form1_Load(object sender, EventArgs e)
         {
             // Combo boxes
+            // Time Dimension
             // Set combo box items for time sales selection
             comboBoxTimeSales.Items.AddRange(new Object[] { "Weeks", "Months", "Years" });
             comboBoxTimeSales.SelectedItem = "Weeks";
@@ -86,6 +87,27 @@ namespace IMAT2214_1819_502_Assignment_2
             // Set combo box items for time discount selection
             comboBoxTimeDiscount.Items.AddRange(new Object[] { "Days", "Weeks", "Months", "Years" });
             comboBoxTimeDiscount.SelectedItem = "Days";
+
+            // Customer Dimension
+            // Set combo box items for customer sales selection
+            comboBoxCustomerSales.Items.AddRange(new Object[] { "Cities", "States", "Regions", "Countries", "Postcodes" });
+            comboBoxCustomerSales.SelectedItem = "Cities";
+
+            // Set combo box items for customer sales selection
+            comboBoxCustomerProfit.Items.AddRange(new Object[] { "Cities", "States", "Regions", "Countries", "Postcodes" });
+            comboBoxCustomerProfit.SelectedItem = "Cities";
+
+            // Set combo box items for customer sales selection
+            comboBoxCustomerQuantity.Items.AddRange(new Object[] { "Cities", "States", "Regions", "Countries", "Postcodes" });
+            comboBoxCustomerQuantity.SelectedItem = "Cities";
+
+            // Set combo box items for customer sales selection
+            comboBoxCustomerValue.Items.AddRange(new Object[] { "Cities", "States", "Regions", "Countries", "Postcodes" });
+            comboBoxCustomerValue.SelectedItem = "Cities";
+
+            // Set combo box items for customer sales selection
+            comboBoxCustomerDiscount.Items.AddRange(new Object[] { "Cities", "States", "Regions", "Countries", "Postcodes" });
+            comboBoxCustomerDiscount.SelectedItem = "Cities";
         }
 
         // Function to split day, month and year
@@ -1331,7 +1353,418 @@ namespace IMAT2214_1819_502_Assignment_2
 
         private void btnLoadCustomerData_Click(object sender, EventArgs e)
         {
+            // Create dictionaries
+            // Create a empty dictionary to store the destination data for sales
+            Dictionary<String, dynamic> salesCount = new Dictionary<String, dynamic>();
 
+            // Create an empty dictionary to store the destination data for profit
+            Dictionary<String, dynamic> profit = new Dictionary<String, dynamic>();
+
+            // Create an empty dictionary to store destination data for quantity
+            Dictionary<String, dynamic> quantity = new Dictionary<String, dynamic>();
+
+            // Create an empty dictionary to store the destination data for value
+            Dictionary<String, dynamic> value = new Dictionary<String, dynamic>();
+
+            // Create an empty dictionary to store the destination data for discount
+            Dictionary<String, dynamic> discount = new Dictionary<String, dynamic>();
+
+            // Create Lists 
+            // Create empty list for Cities
+            List<String> cities = new List<String>();
+
+            // Create empty list for States
+            List<String> states = new List<String>();
+
+            // Create empty list for Regions
+            List<String> regions = new List<String>();
+
+            // Create empty list for Countries 
+            List<String> countries = new List<String>();
+
+            // Create empty list for postcodes
+            List<String> postcodes = new List<String>();
+
+            // Create a connection to the MDF file 
+            String connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
+
+            // Populate year list
+            using (SqlConnection connection = new SqlConnection(connectionStringDestination))
+            {
+                // Open the connection
+                connection.Open();
+
+                // Query for reader to execute to get cities
+                SqlCommand command = new SqlCommand("SELECT DISTINCT city FROM Customer", connection);
+
+                // Create data reader
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    // Check the query returns data
+                    if (reader.HasRows)
+                    {
+                        // While the reader reads the data
+                        while (reader.Read())
+                        {
+                            // Add each city to list
+                            cities.Add(reader[0].ToString());
+                        }
+                    }
+                }
+
+                // Query for reader to execute to get states
+                SqlCommand command2 = new SqlCommand("SELECT DISTINCT state FROM Customer", connection);
+
+                // Create data reader
+                using (SqlDataReader reader = command2.ExecuteReader())
+                {
+                    // Check the query returns data
+                    if (reader.HasRows)
+                    {
+                        // While the reader reads the data
+                        while (reader.Read())
+                        {
+                            // Add each state to list
+                            states.Add(reader[0].ToString());
+                        }
+                    }
+                }
+
+                // Query for reader to execute to get region
+                SqlCommand command3 = new SqlCommand("SELECT DISTINCT region FROM Customer", connection);
+
+                // Create data reader
+                using (SqlDataReader reader = command3.ExecuteReader())
+                {
+                    // Check the query returns data
+                    if (reader.HasRows)
+                    {
+                        // While the reader reads the data
+                        while (reader.Read())
+                        {
+                            // Add each region to list
+                            regions.Add(reader[0].ToString());
+                        }
+                    }
+                }
+
+                // Query for reader to execute to get countries
+                SqlCommand command4 = new SqlCommand("SELECT DISTINCT country FROM Customer", connection);
+
+                // Create data reader
+                using (SqlDataReader reader = command4.ExecuteReader())
+                {
+                    // Check the query returns data
+                    if (reader.HasRows)
+                    {
+                        // While the reader reads the data
+                        while (reader.Read())
+                        {
+                            // Add each country to list
+                            countries.Add(reader[0].ToString());
+                        }
+                    }
+                }
+
+                // Query for reader to execute to get postcodes
+                SqlCommand command5 = new SqlCommand("SELECT DISTINCT postalCode FROM Customer", connection);
+
+                // Create data reader
+                using (SqlDataReader reader = command5.ExecuteReader())
+                {
+                    // Check the query returns data
+                    if (reader.HasRows)
+                    {
+                        // While the reader reads the data
+                        while (reader.Read())
+                        {
+                            // Add each postcode to list
+                            postcodes.Add(reader[0].ToString());
+                        }
+                    }
+                }
+
+                // Sales
+
+                // If user selects cities for sales
+                if (comboBoxCustomerSales.Text == "Cities")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COUNT(*) as SalesCount FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.city = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, cities, salesCount, chartCustomerSales, "sales");
+                }
+
+                // If user selects cities for states
+                else if (comboBoxCustomerSales.Text == "States")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COUNT(*) as SalesCount FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.state = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, states, salesCount, chartCustomerSales, "sales");
+                }
+
+                // If user selects regions for sales
+                else if (comboBoxCustomerSales.Text == "Regions")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COUNT(*) as SalesCount FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.region = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, regions, salesCount, chartCustomerSales, "sales");
+                }
+
+                // If user selects countries for states
+                else if (comboBoxCustomerSales.Text == "Countries")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COUNT(*) as SalesCount FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.country = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, countries, salesCount, chartCustomerSales, "sales");
+                }
+
+                // If user selects postcodes for sales
+                else if (comboBoxCustomerSales.Text == "Postcodes")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COUNT(*) as SalesCount FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.postalCode = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, postcodes, salesCount, chartCustomerSales, "sales");
+                }
+
+                // Profit
+                // If user selects cities for profit
+                if (comboBoxCustomerProfit.Text == "Cities")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(profit), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.city = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, cities, profit, chartCustomerProfit, "profit");
+                }
+
+                // If user selects states for profit
+                else if (comboBoxCustomerProfit.Text == "States")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(profit), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.state = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, states, profit, chartCustomerProfit, "profit");
+                }
+
+                // If user selects regions for profit
+                else if (comboBoxCustomerProfit.Text == "Regions")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(profit), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.region = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, regions, profit, chartCustomerProfit, "profit");
+                }
+
+                // If user selects countries for profit
+                else if (comboBoxCustomerProfit.Text == "Countries")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(profit), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.country = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, countries, profit, chartCustomerProfit, "profit");
+                }
+
+                // If user selects postcodes for profit
+                else if (comboBoxCustomerProfit.Text == "Postcodes")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(profit), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.postalCode = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, postcodes, profit, chartCustomerProfit, "profit");
+                }
+
+                // Quantity
+                // If user selects cities for Quantity
+                if (comboBoxCustomerQuantity.Text == "Cities")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(quantity), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.city = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, cities, quantity, chartCustomerQuantity, "quantity");
+                }
+
+                // If user selects states for Quantity
+                else if (comboBoxCustomerQuantity.Text == "States")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(quantity), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.state = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, states, quantity, chartCustomerQuantity, "quantity");
+                }
+
+                // If user selects regions for Quantity
+                else if (comboBoxCustomerQuantity.Text == "Regions")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(quantity), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.region = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, regions, quantity, chartCustomerQuantity, "quantity");
+                }
+
+                // If user selects countries for Quantity
+                else if (comboBoxCustomerQuantity.Text == "Countries")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(quantity), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.country = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, countries, quantity, chartCustomerQuantity, "quantity");
+                }
+
+                // If user selects postcodes for Quantity
+                else if (comboBoxCustomerQuantity.Text == "Postcodes")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(quantity), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.postalCode = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, postcodes, quantity, chartCustomerQuantity, "quantity");
+                }
+
+                // Value
+                // If user selects cities for Value
+                if (comboBoxCustomerValue.Text == "Cities")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(value), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.city = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, cities, value, chartCustomerValue, "value");
+                }
+
+                // If user selects states for Value
+                else if (comboBoxCustomerValue.Text == "States")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(value), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.state = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, states, value, chartCustomerValue, "value");
+                }
+
+                // If user selects regions for Value
+                else if (comboBoxCustomerValue.Text == "Regions")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(value), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.region = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, regions, value, chartCustomerValue, "value");
+                }
+
+                // If user selects countries for Value
+                else if (comboBoxCustomerValue.Text == "Countries")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(value), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.country = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, countries, value, chartCustomerValue, "value");
+                }
+
+                // If user selects postcodes for Value
+                else if (comboBoxCustomerValue.Text == "Postcodes")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(value), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.postalCode = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, postcodes, value, chartCustomerValue, "value");
+                }
+
+                // Discount
+                // If user selects cities for Discount
+                if (comboBoxCustomerDiscount.Text == "Cities")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(discount), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.city = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, cities, discount, chartCustomerDiscount, "discount");
+                }
+
+                // If user selects states for Discount
+                else if (comboBoxCustomerDiscount.Text == "States")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(discount), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.state = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, states, discount, chartCustomerDiscount, "discount");
+                }
+
+                // If user selects regions for Discount
+                else if (comboBoxCustomerDiscount.Text == "Regions")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(discount), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.region = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, regions, discount, chartCustomerDiscount, "discount");
+                }
+
+                // If user selects countries for Discount
+                else if (comboBoxCustomerDiscount.Text == "Countries")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(discount), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.country = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, countries, discount, chartCustomerDiscount, "discount");
+                }
+
+                // If user selects postcodes for Discount
+                else if (comboBoxCustomerDiscount.Text == "Postcodes")
+                {
+                    // Sql string to pass to display grapth method
+                    string SQLstring = "SELECT COALESCE(SUM(discount), 0) FROM FactTableAssignment " +
+                                                        "JOIN Customer ON FactTableAssignment.customerId = Customer.id WHERE Customer.postalCode = @selection";
+
+                    // Call method
+                    DisplayGraphs(connectionStringDestination, SQLstring, postcodes, discount, chartCustomerDiscount, "discount");
+                }
+            }
         }
     }
 }
