@@ -27,6 +27,8 @@ namespace IMAT2214_1819_502_Assignment_2
         private static readonly Regex regex2 = new Regex(@"^\d+$");
         //https://stackoverflow.com/questions/18898700/regex-for-combination-of-letters-numbers-w-special-characters/18899449
         private static readonly Regex regexCustomerID = new Regex(@"[A-Z]{2}[-]\d{0,6}");
+        // Regex for product id
+        private static readonly Regex regexProductID = new Regex(@"[A-Z]{3}[-][A-Z]{2}[[-]\d{0,6}");
 
 
         // Appearance buttons
@@ -213,6 +215,92 @@ namespace IMAT2214_1819_502_Assignment_2
                 chart.DataBind();
         }
 
+        private string CreateNewID(string initials, string[] SQLString, string dimension)
+        {
+            // Create string for reference 
+            String reference = "";
+            // Get number for reference
+            // Switch statement so code can loop to generate if reference already exists
+            switch (1)
+            {
+                case 1:
+                    // Create random number generator
+                    Random rndGenerator = new Random();
+
+                    // Create string with random number in it
+                    string referenceNo = rndGenerator.Next(10000, 99999).ToString();
+                    Console.WriteLine(referenceNo);
+
+                    // Create reference as a whole
+                    reference = initials + referenceNo;
+                    Console.WriteLine(reference);
+
+                    // Go to next case
+                    goto case 2;
+                case 2:
+                    // Create Connection string for data set 1
+                    String connectionString = Properties.Settings.Default.Data_set_1ConnectionString;
+
+                    using (OleDbConnection connection = new OleDbConnection(connectionString))
+                    {
+                        // Open the connection
+                        connection.Open();
+
+                        // Create reader 
+                        OleDbDataReader reader = null;
+
+                        // Create command to check if reference already exists
+                        OleDbCommand command = new OleDbCommand(SQLString[0], connection);
+                        // Create parameter for reference
+                        command.Parameters.Add(new OleDbParameter("@reference", reference));
+
+                        // link reader and command 
+                        reader = command.ExecuteReader();
+
+                        if (reader.HasRows)
+                        {
+                            goto case 1;
+                        }
+                        else
+                        {
+                            goto case 3;
+                        }
+                    }
+                case 3:
+                    // Create Connection string for data set 2
+                    String connectionString2 = Properties.Settings.Default.DataSet2_1_ConnectionString;
+
+                    using (OleDbConnection connection = new OleDbConnection(connectionString2))
+                    {
+                        // Open the connection
+                        connection.Open();
+
+                        // Create reader 
+                        OleDbDataReader reader = null;
+
+                        // Create command to check if reference already exists
+                        OleDbCommand command = new OleDbCommand(SQLString[1], connection);
+                        // Create parameter for reference
+                        command.Parameters.Add(new OleDbParameter("@reference", reference));
+
+                        // link reader and command 
+                        reader = command.ExecuteReader();
+
+                        if (reader.HasRows)
+                        {
+                            goto case 2;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+            }
+
+            // Return value
+            return reference;
+        }
+
         // Function to get the IDs for the dimensions
         private int getIDs(string date, string customerID, string productID, string dimension)
         {
@@ -324,6 +412,8 @@ namespace IMAT2214_1819_502_Assignment_2
             string[] arrayCustomer = rawData.Split('/');
 
             // Customer info
+            // String to store the customer name
+            string customerName = arrayCustomer[1];
             // Create empty string for reference
             string reference = "";
 
@@ -334,11 +424,19 @@ namespace IMAT2214_1819_502_Assignment_2
                 reference = arrayCustomer[0];
             } else
             {
-                Console.WriteLine("Customer ID is not in correct format: " + arrayCustomer[0]);
-                reference = "TST-4444";
+                // Split Customer name into two string
+                String[] arrayCustomerName = customerName.Split(new Char[0], StringSplitOptions.RemoveEmptyEntries);
+                // Get first letter from each string and add to reference with hyphen
+                String initials = arrayCustomerName[0].Substring(0, 1) + arrayCustomerName[1].Substring(0, 1) + "-";
+                Console.WriteLine(initials);
+
+                // Create array for two sql strings
+                String[] SQLString = { "SELECT [Customer ID] FROM Sheet1 WHERE [Customer ID] = @reference",
+                        "SELECT [Customer ID] FROM [Student Sample 2 - Sheet1] WHERE [Customer ID] = @reference"};
+
+                // all refernce
+                reference = CreateNewID(initials, SQLString, "Customer");
             }
-            // String to store the customer name
-            string customerName = arrayCustomer[1];
             // String to store the country
             string country = arrayCustomer[2];
             // String to store the city
@@ -631,7 +729,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Dates Dimension - Get Dates from dataset 
 
                 // getDates allows us to write a query in order to get the data from the rows we want
-                OleDbCommand getDates = new OleDbCommand("SELECT [Order Date], [Ship Date] FROM Sheet1", connection);
+                OleDbCommand getDates = new OleDbCommand("SELECT DISTINCT([Order Date]), [Ship Date] FROM Sheet1", connection);
 
                 // Sends the command query to the reader
                 reader = getDates.ExecuteReader();
@@ -660,7 +758,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Customer Dimension - Get Customer info from data set 
 
                 // Query to get all the relevant Customer Info from the data set
-                OleDbCommand getCustomerInfo = new OleDbCommand("SELECT [Customer ID], [Customer Name], Country, City, State, [Postal Code], Region FROM Sheet1", connection);
+                OleDbCommand getCustomerInfo = new OleDbCommand("SELECT DISTINCT([Customer ID]), [Customer Name], Country, City, State, [Postal Code], Region FROM Sheet1", connection);
 
                 // Executes the sql query
                 reader = getCustomerInfo.ExecuteReader();
@@ -681,7 +779,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Product Dimension = Get Product info from data set
 
                 // Query to get all the relevatn customer info from the data set
-                OleDbCommand getProductInfo = new OleDbCommand("SELECT [Product ID], [Product Name], Category, [Sub-Category] FROM Sheet1", connection);
+                OleDbCommand getProductInfo = new OleDbCommand("SELECT DISTINCT([Product ID]), [Product Name], Category, [Sub-Category] FROM Sheet1", connection);
 
                 // Executes the query
                 reader = getProductInfo.ExecuteReader();
@@ -712,7 +810,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Dates Dimension - Get Dates from dataset 2
 
                 // getDates allows us to write a query in order to get the data from the rows we want
-                OleDbCommand getDates = new OleDbCommand("SELECT [Order Date], [Ship Date] FROM [Student Sample 2 - Sheet1]", connection);
+                OleDbCommand getDates = new OleDbCommand("SELECT DISTINCT([Order Date]), [Ship Date] FROM [Student Sample 2 - Sheet1]", connection);
 
                 // Sends the command query to the reader
                 reader = getDates.ExecuteReader();
@@ -755,7 +853,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Customer Dimension - Get Customer info from data set 2
 
                 // Query to get all the relevant Customer Info from the data set
-                OleDbCommand getCustomerInfo = new OleDbCommand("SELECT [Customer ID], [Customer Name], Country, City, State, [Postal Code], Region FROM [Student Sample 2 - Sheet1]", connection);
+                OleDbCommand getCustomerInfo = new OleDbCommand("SELECT DISTINCT([Customer ID]), [Customer Name], Country, City, State, [Postal Code], Region FROM [Student Sample 2 - Sheet1]", connection);
 
                 // Executes the sql query
                 reader = getCustomerInfo.ExecuteReader();
@@ -786,7 +884,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Product Dimension = Get Product info from data set
 
                 // Query to get all the relevatn customer info from the data set
-                OleDbCommand getProductInfo = new OleDbCommand("SELECT [Product ID], [Product Name], Category, [Sub-Category] FROM [Student Sample 2 - Sheet1]", connection);
+                OleDbCommand getProductInfo = new OleDbCommand("SELECT DISTINCT([Product ID]), [Product Name], Category, [Sub-Category] FROM [Student Sample 2 - Sheet1]", connection);
 
                 // Executes the query
                 reader = getProductInfo.ExecuteReader();
