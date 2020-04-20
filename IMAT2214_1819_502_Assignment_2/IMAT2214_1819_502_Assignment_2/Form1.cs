@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using System.Windows.Forms.DataVisualization.Charting;
+using System.Text.RegularExpressions;
 
 namespace IMAT2214_1819_502_Assignment_2
 {
@@ -20,6 +21,13 @@ namespace IMAT2214_1819_502_Assignment_2
         {
             InitializeComponent();
         }
+        // Create regex to check if string is numeric
+        //https://regex101.com/r/sL6zP7/2/codegen?language=csharp
+        private static readonly Regex regex = new Regex(@"^-?[0-9]*\.?[0-9]+$");
+        private static readonly Regex regex2 = new Regex(@"^\d+$");
+        //https://stackoverflow.com/questions/18898700/regex-for-combination-of-letters-numbers-w-special-characters/18899449
+        private static readonly Regex regexCustomerID = new Regex(@"[A-Z]{2}[-]\d{0,6}");
+
 
         // Appearance buttons
 
@@ -316,8 +324,19 @@ namespace IMAT2214_1819_502_Assignment_2
             string[] arrayCustomer = rawData.Split('/');
 
             // Customer info
-            // string to store the customer id as reference
-            string reference = arrayCustomer[0];
+            // Create empty string for reference
+            string reference = "";
+
+            // Check the customer id is in the correct format
+            if (regexCustomerID.IsMatch(arrayCustomer[0]))
+            {
+                // string to store the customer id as reference
+                reference = arrayCustomer[0];
+            } else
+            {
+                Console.WriteLine("Customer ID is not in correct format: " + arrayCustomer[0]);
+                reference = "TST-4444";
+            }
             // String to store the customer name
             string customerName = arrayCustomer[1];
             // String to store the country
@@ -638,22 +657,6 @@ namespace IMAT2214_1819_502_Assignment_2
                     DatesFormatted.Add(dates[0]);
                 }
 
-                // Bind list to listbox
-                listBoxTimeDimension.DataSource = DatesFormatted;
-
-                // For each loop goes through each date in DatesFormatted list
-                foreach (string date in DatesFormatted)
-                {
-                    // Call function to split the dates with the date as a parameter
-                    splitDates(date);
-                }
-
-                // Splitting the DatesFormatted into day, month and year
-                string[] arrayDate = DatesFormatted[0].ToString().Split('/');
-                // Display new split day, month and year in console log
-                //Console.WriteLine("Day: " + arrayDate[0] + "  Month: " + arrayDate[1] + " Year: " + arrayDate[2]);
-
-
                 // Customer Dimension - Get Customer info from data set 
 
                 // Query to get all the relevant Customer Info from the data set
@@ -675,18 +678,6 @@ namespace IMAT2214_1819_502_Assignment_2
                         reader[6].ToString());
                 }
 
-                // For each loop goes through each customers info
-                foreach (string customer in Customers)
-                {
-                    // Console to check how to split customer info
-                    //console.WriteLine(customer);
-                    // Call to split customer function with customer as a parameter
-                    splitCustomers(customer);
-                }
-
-                // Bind list to customer listbox
-                listBoxCustomerDimension.DataSource = Customers;
-
                 // Product Dimension = Get Product info from data set
 
                 // Query to get all the relevatn customer info from the data set
@@ -704,16 +695,121 @@ namespace IMAT2214_1819_502_Assignment_2
                         reader[2].ToString() + "~" +
                         reader[3].ToString());
                 }
+            }
+
+            // Second dataset
+            // Create the database string
+            string connectionString2 = Properties.Settings.Default.DataSet2_1_ConnectionString;
+
+            // Create a boundary for the object to be used - Object will be destroyed at the end of te block
+            using (OleDbConnection connection = new OleDbConnection(connectionString2))
+            {
+                // Opens a filestream to the specified path
+                connection.Open();
+                // Reader provides a way of reading forward only stream of data rows from a data source
+                OleDbDataReader reader = null;
+
+                // Dates Dimension - Get Dates from dataset 2
+
+                // getDates allows us to write a query in order to get the data from the rows we want
+                OleDbCommand getDates = new OleDbCommand("SELECT [Order Date], [Ship Date] FROM [Student Sample 2 - Sheet1]", connection);
+
+                // Sends the command query to the reader
+                reader = getDates.ExecuteReader();
+
+                // Call read before accessing data - while will keep reading until there are no results left
+                while (reader.Read())
+                {
+                    // Add date to the list from the first column
+                    Dates.Add(reader[0].ToString());
+                    // Add date to the list from the second colun
+                    Dates.Add(reader[1].ToString());
+                }
+
+                // Create new list for dates without timestamp
+                List<string> DatesFormatted = new List<string>();
+
+                // For each loop that goes through each date in the list
+                foreach (string date in Dates)
+                {
+                    // Split creates array of substrings by splitting original string, split by empty space
+                    var dates = date.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
+                    // Add new split date to new DatesFormatted List
+                    DatesFormatted.Add(dates[0]);
+                }
+
+                // Bind list to listbox
+                listBoxTimeDimension.DataSource = DatesFormatted;
+
+                // For each loop goes through each date in DatesFormatted list
+                foreach (string date in DatesFormatted)
+                {
+                    // Call function to split the dates with the date as a parameter
+                    splitDates(date);
+                }
+
+                // Splitting the DatesFormatted into day, month and year
+                string[] arrayDate = DatesFormatted[0].ToString().Split('/');
+
+
+                // Customer Dimension - Get Customer info from data set 2
+
+                // Query to get all the relevant Customer Info from the data set
+                OleDbCommand getCustomerInfo = new OleDbCommand("SELECT [Customer ID], [Customer Name], Country, City, State, [Postal Code], Region FROM [Student Sample 2 - Sheet1]", connection);
+
+                // Executes the sql query
+                reader = getCustomerInfo.ExecuteReader();
+
+                //Read through all results
+                while (reader.Read())
+                {
+                    // Add the customers found in the query by the reader into a string
+                    Customers.Add(reader[0].ToString() + "/" +
+                        reader[1].ToString() + "/" +
+                        reader[2].ToString() + "/" +
+                        reader[3].ToString() + "/" +
+                        reader[4].ToString() + "/" +
+                        reader[5].ToString() + "/" +
+                        reader[6].ToString());
+                }
+
+                // For each loop goes through each customers info
+                foreach (string customer in Customers)
+                {
+                    // Call to split customer function with customer as a parameter
+                    splitCustomers(customer);
+                }
+
+                // Bind list to customer listbox
+                listBoxCustomerDimension.DataSource = Customers;
+
+                // Product Dimension = Get Product info from data set
+
+                // Query to get all the relevatn customer info from the data set
+                OleDbCommand getProductInfo = new OleDbCommand("SELECT [Product ID], [Product Name], Category, [Sub-Category] FROM [Student Sample 2 - Sheet1]", connection);
+
+                // Executes the query
+                reader = getProductInfo.ExecuteReader();
+
+                // Read through all results
+                while (reader.Read())
+                {
+                    // Add the products found in the query by the reader into a string
+                    Products.Add(reader[0].ToString() + "~" +
+                        reader[1].ToString() + "~" +
+                        reader[2].ToString() + "~" +
+                        reader[3].ToString());
+                }
 
                 // For each loop to go through all product info
-                foreach (string product in Products) {
+                foreach (string product in Products)
+                {
                     // Call the function to split the product info 
                     splitProducts(product);
                 }
 
                 // Bind the listbox to list
                 listBoxProductDestination.DataSource = Products;
-
             }
         }
 
@@ -941,10 +1037,109 @@ namespace IMAT2214_1819_502_Assignment_2
                     Int32 productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product");
                     Int32 customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer");
 
-                    //Console.WriteLine(timeID + "    " + productID + "   " + customerID);
+                    // Insert it into the database
+                    insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
+                }
+            }
+
+            // Create database connection string for second dataset
+            string connectionString2 = Properties.Settings.Default.DataSet2_1_ConnectionString;
+
+            using (OleDbConnection connection = new OleDbConnection(connectionString2))
+            {
+                // Open the connection
+                connection.Open();
+                // Set reader to null
+                OleDbDataReader reader = null;
+                // Query to get all columns from sheet1 
+                OleDbCommand getData = new OleDbCommand("SELECT [Row ID], [Order ID], [Ship Date], [Order Date], " +
+                    "[Ship Mode], [Customer ID], [Customer Name], Segment, Country, City, State, [Postal Code], " +
+                    "[Product ID], Region, Category, [Sub-Category], [Product Name], Sales, Quantity, Profit, " +
+                    "Discount FROM [Student Sample 2 - Sheet1];", connection);
+
+                // Use reader to execute query
+                reader = getData.ExecuteReader();
+                // While the reader goes through the data
+                while (reader.Read())
+                {
+
+                    
+                    
+                    // Get a line of data from the source
+                    // Get the numeric values
+                    String sales = "";
+                    String quantity = "";
+                    String profit = "";
+                    String discount = "";
+
+                    // Check if string is numeric
+                    //https://www.techiedelight.com/identify-string-is-numeric-csharp/
+
+                    // Sales check
+                    if (regex.IsMatch(reader["Sales"].ToString()))
+                    {
+                        // If the data given is numeric then insert value into sales decimal
+                        sales = Convert.ToString(reader["Sales"]);
+                        //Console.WriteLine(reader["Sales"] + " Is numeric");
+                    } else {
+                        // If the data given is not numeric then set sales decimal to 0.00
+                        //sales = 0;
+                        //Console.WriteLine(reader["Sales"] + " Is not numeric");
+                    }
+
+                    // Quantity
+                    if (regex.IsMatch(reader["Quantity"].ToString()))
+                    {
+                        // If the data given is numeric then insert value into quantity int
+                        //Console.WriteLine(reader["Quantity"] + " Is numeric");
+                        quantity = Convert.ToString(reader["Quantity"]);
+                    }
+                    else
+                    {
+                        // If the data given is not numeric then set quantity int to 0
+                        //quantity = 0;
+                        //Console.WriteLine(reader["Quantity"] + " Is not numeric");
+                    }
+
+                    // Profit
+                    if (regex.IsMatch(reader["Profit"].ToString()))
+                    {
+                        // If the data given is numeric then insert value into profit decimal
+                        profit = Convert.ToString(reader["Profit"]);
+                        //Console.WriteLine(reader["Profit"] + " Is numeric");
+                    }
+                    else
+                    {
+                        // If the data given is not numeric then set profit decimal to 0.00
+                        //profit = 0;
+                        //Console.WriteLine(reader["Profit"] + " Is not numeric");
+                    }
+
+                    // Discount
+                    if (regex.IsMatch(reader["Discount"].ToString()))
+                    {
+                        // If the data given is numeric then insert value into discount decimal
+                        discount = Convert.ToString(reader["Profit"]);
+                        //Console.WriteLine(reader["Discount"] + " Is numeric");
+                    }
+                    else
+                    {
+                        // If the data given is not numeric then set discount decimal to 0.00
+                        //discount = 0;
+                        //Console.WriteLine(reader["Discount"] + " Is not numeric");
+                    }
+                    string text = sales + " : " + quantity + " : " + profit + " : " + discount;
+
+                    Console.WriteLine(text);
+                    /*
+                    // Get the dimension IDs
+                    Int32 timeID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Time");
+                    Int32 productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product");
+                    Int32 customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer");
 
                     // Insert it into the database
                     insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
+                    */
                 }
             }
 
