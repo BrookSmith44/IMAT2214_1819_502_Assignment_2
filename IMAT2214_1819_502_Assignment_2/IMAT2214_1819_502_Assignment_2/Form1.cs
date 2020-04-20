@@ -25,10 +25,11 @@ namespace IMAT2214_1819_502_Assignment_2
         //https://regex101.com/r/sL6zP7/2/codegen?language=csharp
         private static readonly Regex regex = new Regex(@"^-?[0-9]*\.?[0-9]+$");
         private static readonly Regex regex2 = new Regex(@"^\d+$");
+        // Customer ID
         //https://stackoverflow.com/questions/18898700/regex-for-combination-of-letters-numbers-w-special-characters/18899449
         private static readonly Regex regexCustomerID = new Regex(@"[A-Z]{2}[-]\d{0,6}");
-        // Regex for product id
-        private static readonly Regex regexProductID = new Regex(@"[A-Z]{3}[-][A-Z]{2}[[-]\d{0,6}");
+        // Regex for product ID
+        private static readonly Regex regexProductID = new Regex(@"[A-Z]{3}[-][A-Z]{2}[[-]\d{0,9}");
 
 
         // Appearance buttons
@@ -215,7 +216,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 chart.DataBind();
         }
 
-        private string CreateNewID(string initials, string[] SQLString, string dimension)
+        private string CreateNewID(string initials, string[] SQLString)
         {
             // Create string for reference 
             String reference = "";
@@ -435,7 +436,7 @@ namespace IMAT2214_1819_502_Assignment_2
                         "SELECT [Customer ID] FROM [Student Sample 2 - Sheet1] WHERE [Customer ID] = @reference"};
 
                 // all refernce
-                reference = CreateNewID(initials, SQLString, "Customer");
+                reference = CreateNewID(initials, SQLString);
             }
             // String to store the country
             string country = arrayCustomer[2];
@@ -458,14 +459,38 @@ namespace IMAT2214_1819_502_Assignment_2
             // Array to collect the data from the products list, split by the slashes between
             string[] arrayProduct = rawData.Split('~');
 
+
             // String to store the product id as reference
-            string reference = arrayProduct[0];
-            // String to store the product name
-            string productName = arrayProduct[1];
+            string reference = "";
             // String to store the category
             string category = arrayProduct[2];
             // String to store the subcategory
             string subcategory = arrayProduct[3];
+
+            // Check the customer id is in the correct format
+            if (regexProductID.IsMatch(arrayProduct[0]))
+            {
+                // string to store the customer id as reference
+                reference = arrayProduct[0];
+
+            }
+            else
+            {
+                // Get first letter from each string and add to reference with hyphen
+                String initials = category.Substring(0, 3) + "-" + subcategory.Substring(0, 2) + "-";
+                // Capitilize string
+                string initialsCap = initials.ToUpper();
+                Console.WriteLine(initialsCap);
+
+                // Create array for two sql strings
+                String[] SQLString = { "SELECT [Customer ID] FROM Sheet1 WHERE [Customer ID] = @reference",
+                        "SELECT [Customer ID] FROM [Student Sample 2 - Sheet1] WHERE [Customer ID] = @reference"};
+
+                // all refernce
+                reference = CreateNewID(initialsCap, SQLString);
+            }
+            // String to store the product name
+            string productName = arrayProduct[1];
 
             // Call function to insert data into product dimension
             insertProductDimension(reference, category, subcategory, productName);
