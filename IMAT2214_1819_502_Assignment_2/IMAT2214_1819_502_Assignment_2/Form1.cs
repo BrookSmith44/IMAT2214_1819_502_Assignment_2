@@ -1277,8 +1277,15 @@ namespace IMAT2214_1819_502_Assignment_2
                     Int32 productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product", false);
                     Int32 customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer", false);
 
-                    // Insert it into the database
-                    insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
+                    // Check that the IDs have been added
+                    if (timeID == 0 && productID == 0 && customerID == 0 )
+                    {
+                        // Do nothing
+                    } else
+                    {
+                        // Insert it into the database
+                        insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
+                    }
                 }
             }
 
@@ -1341,8 +1348,13 @@ namespace IMAT2214_1819_502_Assignment_2
 
                     string text = sales + ":" + quantity + ":" + discount + ":" + profit + ":" + field22 + ":" + field23 + ":" + timeID + ":" + productID + ":" + customerID;
 
-
-                    splitFactTable(text);
+                    if (timeID == 0 && productID == 0 && customerID == 0)
+                    {
+                        // Do nothing
+                    } else
+                    {
+                        splitFactTable(text);
+                    }
                 }
             }
 
@@ -1387,7 +1399,7 @@ namespace IMAT2214_1819_502_Assignment_2
                     }
                     else // If there is no data available
                     {
-                        FactTableList.Add("No Data available");
+                        FactTableList.Add("No Data Available");
                     }
 
 
@@ -1401,13 +1413,15 @@ namespace IMAT2214_1819_502_Assignment_2
                     foreach (string fact in FactTableList)
                     {
                         factArray = fact.Split(':');
-                        if (!factArray.Contains("No Data available"))
+                        if (fact == "No Data Available")
                         {
-                            factTable.Rows.Add(new Object[] { factArray[0], factArray[1], factArray[2], factArray[3], factArray[4], factArray[5], factArray[6] });
+                            // Display no data available
+                            factTable.Rows.Add(new Object[] { factArray[0] });
                         }
                         else
                         {
-                            factTable.Rows.Add(new Object[] { factArray[0] });
+                            // Insert facts into fact data table
+                            factTable.Rows.Add(new Object[] { factArray[0], factArray[1], factArray[2], factArray[3], factArray[4], factArray[5], factArray[6] });
                         }
                     }
                 }
