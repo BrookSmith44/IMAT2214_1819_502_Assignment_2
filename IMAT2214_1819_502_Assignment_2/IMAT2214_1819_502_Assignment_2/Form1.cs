@@ -1101,7 +1101,6 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Add rows to the datatable
                 foreach (string row in destinationDates)
                 {
-                    Console.WriteLine(row);
                     // Split the array using a colon
                     timeArray = row.Split(':');
                     // Check if data is not in list
@@ -1515,7 +1514,7 @@ namespace IMAT2214_1819_502_Assignment_2
                         {
                             if (String.IsNullOrWhiteSpace(reader["maxYear"].ToString()))
                             {
-                                Console.WriteLine("Is empty");
+                                // Do Nothing
                             } else
                             {
                                 // Get last 10 years from latest year
