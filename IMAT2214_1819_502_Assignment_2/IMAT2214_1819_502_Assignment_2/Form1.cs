@@ -1502,7 +1502,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 connection.Open();
 
                 // Sql query to get the latest year from time table
-                SqlCommand command = new SqlCommand("SELECT MAX(year) FROM Time", connection);
+                SqlCommand command = new SqlCommand("SELECT MAX(year) as maxYear FROM Time", connection);
 
                 // Create reader
                 using (SqlDataReader reader = command.ExecuteReader())
@@ -1513,15 +1513,21 @@ namespace IMAT2214_1819_502_Assignment_2
                         // While the reader gets the data
                         while (reader.Read())
                         {
-                            // Get last 10 years from latest year
-                            Int32 maxYear = Convert.ToInt32(reader[0]);
-                            for (int i = maxYear - 10; i <= maxYear; i++)
+                            if (String.IsNullOrWhiteSpace(reader["maxYear"].ToString()))
                             {
-                                // Add year to list
-                                yearList.Add(Convert.ToString(i));
+                                Console.WriteLine("Is empty");
+                            } else
+                            {
+                                // Get last 10 years from latest year
+                                Int32 maxYear = Convert.ToInt32(reader[0]);
+                                for (int i = maxYear - 10; i <= maxYear; i++)
+                                {
+                                    // Add year to list
+                                    yearList.Add(Convert.ToString(i));
+                                }
                             }
                         }
-                    }
+                    } 
                 }
                 // Get dates from time dimension
                 // Sql query to get the latest year from time table
