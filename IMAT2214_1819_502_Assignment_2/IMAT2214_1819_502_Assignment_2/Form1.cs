@@ -23,13 +23,13 @@ namespace IMAT2214_1819_502_Assignment_2
         }
         // Create regex to check if string is numeric
         //https://regex101.com/r/sL6zP7/2/codegen?language=csharp
-        private static readonly Regex regex = new Regex(@"^-?[0-9]*\.?[0-9]+$");
-        private static readonly Regex regex2 = new Regex(@"^\d+$");
+        private static readonly Regex regexInt = new Regex(@"^[0-9]{0,9}$");
+        private static readonly Regex regexDecimal = new Regex(@"^\d{0,9}\[.]\ \d{0,9}");
         // Customer ID
         //https://stackoverflow.com/questions/18898700/regex-for-combination-of-letters-numbers-w-special-characters/18899449
         private static readonly Regex regexCustomerID = new Regex(@"[A-Z]{2}[-]\d{0,6}");
         // Regex for product ID
-        private static readonly Regex regexProductID = new Regex(@"[A-Z]{3}[-][A-Z]{2}[[-]\d{0,9}");
+        private static readonly Regex regexProductID = new Regex(@"[A-Z]{3}[-][A-Z]{2}[-]\d{0,9}");
 
 
         // Appearance buttons
@@ -229,12 +229,11 @@ namespace IMAT2214_1819_502_Assignment_2
                     Random rndGenerator = new Random();
 
                     // Create string with random number in it
-                    string referenceNo = rndGenerator.Next(10000, 99999).ToString();
+                    string referenceNo = rndGenerator.Next(10000, 9999999).ToString();
                     Console.WriteLine(referenceNo);
 
                     // Create reference as a whole
                     reference = initials + referenceNo;
-                    Console.WriteLine(reference);
 
                     // Go to next case
                     goto case 2;
@@ -303,7 +302,7 @@ namespace IMAT2214_1819_502_Assignment_2
         }
 
         // Function to get the IDs for the dimensions
-        private int getIDs(string date, string customerID, string productID, string dimension)
+        private int getIDs(string date, string customerID, string productID, string dimension, bool corrupt)
         {
             // Remove the timestamp from the date
             var dateSplit = date.Split(new char[0], StringSplitOptions.RemoveEmptyEntries);
@@ -315,6 +314,18 @@ namespace IMAT2214_1819_502_Assignment_2
             Tuple<Int32, Int32, Int32, DateTime, String> result = ReturnDayMonthYearData(date);
             // Store db compatible date as string
             string dbDate = result.Item5;
+            // Create empty string for sql
+            string SQLString = "";
+            // Choose SQL String based on if ID is corrupt
+            if (corrupt == false)
+            {
+                SQLString = "SELECT DISTINCT c.id AS id_customer, p.id AS id_product, t.id AS id_time, t.date, c.reference, p.reference FROM Customer c, Product p, Time t " +
+                    "WHERE t.date = @date AND c.reference = @customerid AND p.reference = @productid";
+            } else
+            {
+                SQLString = "SELECT DISTINCT c.id AS id_customer, p.id AS id_product, t.id AS id_time, t.date, c.reference, p.reference FROM Customer c, Product p, Time t " +
+                    "WHERE t.date = @date AND c.name = @customerid AND p.reference = @productid";
+            }
             // Create a connection to the MDF file
             string connectionStringDestination = Properties.Settings.Default.DestinationDatabaseConnectionString;
 
@@ -325,12 +336,8 @@ namespace IMAT2214_1819_502_Assignment_2
                 myConnection.Open();
                 // Check if the date already exists in the database - NO DUPLICATES
                 
-                SqlCommand command = new SqlCommand("SELECT DISTINCT c.id AS id_customer, p.id AS id_product, t.id AS id_time, t.date, c.reference, p.reference FROM Customer c, Product p, Time t " +
-                    "WHERE t.date = @date AND c.reference = @customerid AND p.reference = @productid",
-                    myConnection);
+                SqlCommand command = new SqlCommand(SQLString, myConnection);
 
-                SqlCommand command2 = new SqlCommand("SELECT COUNT(*) FROM Customer", myConnection);
-                //SqlCommand command = new SqlCommand("SELECT id FROM Time, Customer, Product WHERE date = @date", myConnection);
                 // Add a reference to @date
                 command.Parameters.Add(new SqlParameter("date", dbDate));
                 // Add a reference to @customerid
@@ -347,7 +354,6 @@ namespace IMAT2214_1819_502_Assignment_2
                         // Loop while the reads data
                         while (reader.Read())
                         {
-                            //console.WriteLine("Time ID: " + reader["id_time"]);
                             // If statement to if the time dimension has been selected
                             if (dimension == "Time")
                             {
@@ -429,7 +435,6 @@ namespace IMAT2214_1819_502_Assignment_2
                 String[] arrayCustomerName = customerName.Split(new Char[0], StringSplitOptions.RemoveEmptyEntries);
                 // Get first letter from each string and add to reference with hyphen
                 String initials = arrayCustomerName[0].Substring(0, 1) + arrayCustomerName[1].Substring(0, 1) + "-";
-                Console.WriteLine(initials);
 
                 // Create array for two sql strings
                 String[] SQLString = { "SELECT [Customer ID] FROM Sheet1 WHERE [Customer ID] = @reference",
@@ -495,6 +500,98 @@ namespace IMAT2214_1819_502_Assignment_2
             // Call function to insert data into product dimension
             insertProductDimension(reference, category, subcategory, productName);
 
+        }
+
+        // Function to split the data for the fact table
+        private void splitFactTable(String rawData)
+        {
+            // Create array to split the info into 
+            String[] arrayFacts = rawData.Split(':');
+
+            Console.WriteLine(arrayFacts[0] + " : " + arrayFacts[1] + " : " + arrayFacts[2] + " : " + arrayFacts[3] + " : " + arrayFacts[4] + " : " + arrayFacts[5] + " : " + arrayFacts[6] + " : " + arrayFacts[7] + " : " + arrayFacts[8] );
+
+            // Create empty strings for facts
+            Decimal sales = 0;
+            Int32 quantity = 0;
+            Decimal profit = 0;
+            Decimal discount = 0;
+            Decimal d = 0;
+
+            // Check if first array item can be converted
+            bool tryConvert = decimal.TryParse(arrayFacts[0], out d);
+            // Check that facts are in the correct format
+            // Check Sales
+            if (tryConvert == true)
+            {
+                //Console.WriteLine("This is in the correct format: " + arrayFacts[0]);
+                // Set array string to sales decimal
+                sales = Convert.ToDecimal(arrayFacts[0]);
+                // Set array string to quantity int
+                quantity = Convert.ToInt32(arrayFacts[1]);
+                // Set array string to discount decimal
+                discount = Convert.ToDecimal(arrayFacts[2]);
+                // Set array string to profit decimal
+                profit = Convert.ToDecimal(arrayFacts[3]);
+            } else
+            {
+                //Console.WriteLine("This is in the wrong format: " + arrayFacts[0]);
+                // Check next array
+                tryConvert = decimal.TryParse(arrayFacts[1], out d);
+                // If true
+                if (tryConvert == true)
+                {
+                    // Set array string to sales decimal
+                    sales = Convert.ToDecimal(arrayFacts[1]);
+                    // Set array string to quantity int
+                    quantity = Convert.ToInt32(arrayFacts[2]);
+                    // Set array string to discount decimal
+                    discount = Convert.ToDecimal(arrayFacts[3]);
+                    // Set array string to profit decimal
+                    profit = Convert.ToDecimal(arrayFacts[4]);
+                } else
+                {
+                    bool isNull = String.IsNullOrEmpty(arrayFacts[2]);
+                    if (isNull == true)
+                    {
+                        //Console.WriteLine("String is null");
+                        // Set array string to sales decimal
+                        sales = Convert.ToDecimal(arrayFacts[3]);
+                        // Set array string to quantity int
+                        quantity = Convert.ToInt32(arrayFacts[4]);
+                        // Set array string to discount decimal
+                        discount = Convert.ToDecimal(arrayFacts[5]);
+                        // Set array string to profit decimal
+                        profit = 0;
+                    }
+                    else
+                    {
+                        //Console.WriteLine("This is in the wrong format: " + arrayFacts[2] + "   3");
+                        // Set array string to sales decimal
+                        sales = Convert.ToDecimal(arrayFacts[2]);
+                        // Set array string to quantity int
+                        quantity = Convert.ToInt32(arrayFacts[3]);
+                        // Set array string to discount decimal
+                        discount = Convert.ToDecimal(arrayFacts[4]);
+                        // Set array string to profit decimal
+                        profit = Convert.ToDecimal(arrayFacts[5]);
+                    }
+                }
+            }
+            
+
+            
+
+            // Set ID strings
+            // Time ID
+            Int32 timeID = Convert.ToInt32(arrayFacts[6]);
+            // Product ID
+            Int32 productID = Convert.ToInt32(arrayFacts[7]);
+            // Time ID
+            Int32 customerID = Convert.ToInt32(arrayFacts[8]);
+
+            // Insert it into the database
+            // Console.WriteLine(sales + " : " + quantity + " : " + discount + " : " + profit + " : " + timeID + " : " + productID + " : " + customerID);
+            insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
         }
 
         private void insertTimeDimension(string date, string dayName, Int32 dayNumber, string monthName, Int32 monthNumber, Int32 weekNumber, Int32 year, Boolean weekend, Int32 dayOfYear)
@@ -1156,9 +1253,9 @@ namespace IMAT2214_1819_502_Assignment_2
                     Decimal discount = Convert.ToDecimal(reader["discount"]);
 
                     // Get the dimension IDs
-                    Int32 timeID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Time");
-                    Int32 productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product");
-                    Int32 customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer");
+                    Int32 timeID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Time", false);
+                    Int32 productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product", false);
+                    Int32 customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer", false);
 
                     // Insert it into the database
                     insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
@@ -1178,7 +1275,7 @@ namespace IMAT2214_1819_502_Assignment_2
                 OleDbCommand getData = new OleDbCommand("SELECT [Row ID], [Order ID], [Ship Date], [Order Date], " +
                     "[Ship Mode], [Customer ID], [Customer Name], Segment, Country, City, State, [Postal Code], " +
                     "[Product ID], Region, Category, [Sub-Category], [Product Name], Sales, Quantity, Profit, " +
-                    "Discount FROM [Student Sample 2 - Sheet1];", connection);
+                    "Discount, Field22, Field23 FROM [Student Sample 2 - Sheet1];", connection);
 
                 // Use reader to execute query
                 reader = getData.ExecuteReader();
@@ -1190,79 +1287,37 @@ namespace IMAT2214_1819_502_Assignment_2
                     
                     // Get a line of data from the source
                     // Get the numeric values
-                    String sales = "";
-                    String quantity = "";
-                    String profit = "";
-                    String discount = "";
+                    String sales = reader["Sales"].ToString();
+                    String quantity = reader["Quantity"].ToString();
+                    String profit = reader["Profit"].ToString();
+                    String discount = reader["Discount"].ToString();
+                    String field22 = reader["Field22"].ToString();
+                    String field23 = reader["Field23"].ToString();
 
-                    // Check if string is numeric
-                    //https://www.techiedelight.com/identify-string-is-numeric-csharp/
 
-                    // Sales check
-                    if (regex.IsMatch(reader["Sales"].ToString()))
-                    {
-                        // If the data given is numeric then insert value into sales decimal
-                        sales = Convert.ToString(reader["Sales"]);
-                        //Console.WriteLine(reader["Sales"] + " Is numeric");
-                    } else {
-                        // If the data given is not numeric then set sales decimal to 0.00
-                        //sales = 0;
-                        //Console.WriteLine(reader["Sales"] + " Is not numeric");
-                    }
 
-                    // Quantity
-                    if (regex.IsMatch(reader["Quantity"].ToString()))
-                    {
-                        // If the data given is numeric then insert value into quantity int
-                        //Console.WriteLine(reader["Quantity"] + " Is numeric");
-                        quantity = Convert.ToString(reader["Quantity"]);
-                    }
-                    else
-                    {
-                        // If the data given is not numeric then set quantity int to 0
-                        //quantity = 0;
-                        //Console.WriteLine(reader["Quantity"] + " Is not numeric");
-                    }
-
-                    // Profit
-                    if (regex.IsMatch(reader["Profit"].ToString()))
-                    {
-                        // If the data given is numeric then insert value into profit decimal
-                        profit = Convert.ToString(reader["Profit"]);
-                        //Console.WriteLine(reader["Profit"] + " Is numeric");
-                    }
-                    else
-                    {
-                        // If the data given is not numeric then set profit decimal to 0.00
-                        //profit = 0;
-                        //Console.WriteLine(reader["Profit"] + " Is not numeric");
-                    }
-
-                    // Discount
-                    if (regex.IsMatch(reader["Discount"].ToString()))
-                    {
-                        // If the data given is numeric then insert value into discount decimal
-                        discount = Convert.ToString(reader["Profit"]);
-                        //Console.WriteLine(reader["Discount"] + " Is numeric");
-                    }
-                    else
-                    {
-                        // If the data given is not numeric then set discount decimal to 0.00
-                        //discount = 0;
-                        //Console.WriteLine(reader["Discount"] + " Is not numeric");
-                    }
-                    string text = sales + " : " + quantity + " : " + profit + " : " + discount;
-
-                    Console.WriteLine(text);
-                    /*
                     // Get the dimension IDs
-                    Int32 timeID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Time");
-                    Int32 productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product");
-                    Int32 customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer");
+                    Int32 timeID = 0;
+                    Int32 productID = 0;
+                    Int32 customerID = 0;
+                    if (regexCustomerID.IsMatch(reader["Customer ID"].ToString()))
+                    {
+                        customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer", false);
+                        timeID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Time", false);
+                        productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product", false);
+                    } else
+                    {
+                        Console.WriteLine(reader["Customer ID"] + " Is in the wrong format");
+                        customerID = getIDs(reader["Order Date"].ToString(), reader["Customer Name"].ToString(), reader["Product ID"].ToString(), "Customer", true);
+                        timeID = getIDs(reader["Order Date"].ToString(), reader["Customer Name"].ToString(), reader["Product ID"].ToString(), "Time", true);
+                        productID = getIDs(reader["Order Date"].ToString(), reader["Customer Name"].ToString(), reader["Product ID"].ToString(), "Product", true);
+                    }
 
-                    // Insert it into the database
-                    insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
-                    */
+
+                    string text = sales + ":" + quantity + ":" + discount + ":" + profit + ":" + field22 + ":" + field23 + ":" + timeID + ":" + productID + ":" + customerID;
+
+
+                    splitFactTable(text);
                 }
             }
 
