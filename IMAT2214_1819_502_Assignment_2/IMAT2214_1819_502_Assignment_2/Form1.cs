@@ -195,7 +195,6 @@ namespace IMAT2214_1819_502_Assignment_2
                                     if (value == "profit" || value == "value" || value == "discount")
                                     {
                                         fact.Add(listItem, Decimal.Parse(reader[0].ToString()));
-                                        Console.WriteLine(reader[0].ToString());
                                     }
                                 }
                             }
@@ -230,7 +229,6 @@ namespace IMAT2214_1819_502_Assignment_2
 
                     // Create string with random number in it
                     string referenceNo = rndGenerator.Next(10000, 9999999).ToString();
-                    Console.WriteLine(referenceNo);
 
                     // Create reference as a whole
                     reference = initials + referenceNo;
@@ -319,11 +317,11 @@ namespace IMAT2214_1819_502_Assignment_2
             // Choose SQL String based on if ID is corrupt
             if (corrupt == false)
             {
-                SQLString = "SELECT DISTINCT c.id AS id_customer, p.id AS id_product, t.id AS id_time, t.date, c.reference, p.reference FROM Customer c, Product p, Time t " +
+                SQLString = "SELECT c.id AS id_customer, p.id AS id_product, t.id AS id_time, t.date, c.reference, p.reference FROM Customer c, Product p, Time t " +
                     "WHERE t.date = @date AND c.reference = @customerid AND p.reference = @productid";
             } else
             {
-                SQLString = "SELECT DISTINCT c.id AS id_customer, p.id AS id_product, t.id AS id_time, t.date, c.reference, p.reference FROM Customer c, Product p, Time t " +
+                SQLString = "SELECT c.id AS id_customer, p.id AS id_product, t.id AS id_time, t.date, c.reference, p.reference FROM Customer c, Product p, Time t " +
                     "WHERE t.date = @date AND c.name = @customerid AND p.reference = @productid";
             }
             // Create a connection to the MDF file
@@ -485,7 +483,6 @@ namespace IMAT2214_1819_502_Assignment_2
                 String initials = category.Substring(0, 3) + "-" + subcategory.Substring(0, 2) + "-";
                 // Capitilize string
                 string initialsCap = initials.ToUpper();
-                Console.WriteLine(initialsCap);
 
                 // Create array for two sql strings
                 String[] SQLString = { "SELECT [Customer ID] FROM Sheet1 WHERE [Customer ID] = @reference",
@@ -508,8 +505,6 @@ namespace IMAT2214_1819_502_Assignment_2
             // Create array to split the info into 
             String[] arrayFacts = rawData.Split(':');
 
-            Console.WriteLine(arrayFacts[0] + " : " + arrayFacts[1] + " : " + arrayFacts[2] + " : " + arrayFacts[3] + " : " + arrayFacts[4] + " : " + arrayFacts[5] + " : " + arrayFacts[6] + " : " + arrayFacts[7] + " : " + arrayFacts[8] );
-
             // Create empty strings for facts
             Decimal sales = 0;
             Int32 quantity = 0;
@@ -523,7 +518,6 @@ namespace IMAT2214_1819_502_Assignment_2
             // Check Sales
             if (tryConvert == true)
             {
-                //Console.WriteLine("This is in the correct format: " + arrayFacts[0]);
                 // Set array string to sales decimal
                 sales = Convert.ToDecimal(arrayFacts[0]);
                 // Set array string to quantity int
@@ -534,7 +528,6 @@ namespace IMAT2214_1819_502_Assignment_2
                 profit = Convert.ToDecimal(arrayFacts[3]);
             } else
             {
-                //Console.WriteLine("This is in the wrong format: " + arrayFacts[0]);
                 // Check next array
                 tryConvert = decimal.TryParse(arrayFacts[1], out d);
                 // If true
@@ -553,7 +546,6 @@ namespace IMAT2214_1819_502_Assignment_2
                     bool isNull = String.IsNullOrEmpty(arrayFacts[2]);
                     if (isNull == true)
                     {
-                        //Console.WriteLine("String is null");
                         // Set array string to sales decimal
                         sales = Convert.ToDecimal(arrayFacts[3]);
                         // Set array string to quantity int
@@ -565,7 +557,6 @@ namespace IMAT2214_1819_502_Assignment_2
                     }
                     else
                     {
-                        //Console.WriteLine("This is in the wrong format: " + arrayFacts[2] + "   3");
                         // Set array string to sales decimal
                         sales = Convert.ToDecimal(arrayFacts[2]);
                         // Set array string to quantity int
@@ -590,7 +581,6 @@ namespace IMAT2214_1819_502_Assignment_2
             Int32 customerID = Convert.ToInt32(arrayFacts[8]);
 
             // Insert it into the database
-            // Console.WriteLine(sales + " : " + quantity + " : " + discount + " : " + profit + " : " + timeID + " : " + productID + " : " + customerID);
             insertFactTable(timeID, productID, customerID, sales, quantity, profit, discount);
         }
 
@@ -648,7 +638,6 @@ namespace IMAT2214_1819_502_Assignment_2
 
                     // Insert the line 
                     int recordAffected = insertCommand.ExecuteNonQuery();
-                    //console.WriteLine("Records Affected: " + recordAffected);
                 }
             }
         }
@@ -704,7 +693,6 @@ namespace IMAT2214_1819_502_Assignment_2
 
                     // Insert the line 
                     int recordAffected = insertCommand.ExecuteNonQuery();
-                    //console.WriteLine("Records Affected: " + recordAffected);
                 }
             }
         }
@@ -753,7 +741,6 @@ namespace IMAT2214_1819_502_Assignment_2
 
                     // Insert the line 
                     int recordAffected = insertCommand.ExecuteNonQuery();
-                    //console.WriteLine("Records Affected: " + recordAffected);
                 }
             }
         }
@@ -809,7 +796,6 @@ namespace IMAT2214_1819_502_Assignment_2
                     
                     // Insert the line 
                     int recordAffected = insertCommand.ExecuteNonQuery();
-                    //Console.WriteLine("Fact table Records Affected: " + recordAffected);
                 }
             }
         }
@@ -1095,11 +1081,11 @@ namespace IMAT2214_1819_502_Assignment_2
                     // Else if there is no data
                     else
                     {
-                        destinationDates.Add("No Data available");
+                        destinationDates.Add("No Data Available");
                     }
                 }
 
-                // Insert list into datatable 
+                // Insert list into 
                 // Create array for column headers
                 string[] timeColumnHeaders = { "ID", "Day Name", "Day Number", "Month Name", "Month Number", 
                                                 "Week Number", "Year", "Weekend", "Date", "Day of the Year" };
@@ -1115,9 +1101,21 @@ namespace IMAT2214_1819_502_Assignment_2
                 // Add rows to the datatable
                 foreach (string row in destinationDates)
                 {
+                    Console.WriteLine(row);
+                    // Split the array using a colon
                     timeArray = row.Split(':');
-                    timeTable.Rows.Add(new Object[] { timeArray[0], timeArray[1], timeArray[2], timeArray[3], timeArray[4],
+                    // Check if data is not in list
+                    if (row == "No Data Available")
+                    {
+                        // Show no data available
+                        timeTable.Rows.Add(new Object[] { timeArray[0] });
+                    }
+                    else
+                    {
+                        // Insert split arrays into datatable
+                        timeTable.Rows.Add(new Object[] { timeArray[0], timeArray[1], timeArray[2], timeArray[3], timeArray[4],
                     timeArray[5], timeArray[6], timeArray[7], timeArray[8], timeArray[9]});
+                    }
                 }
 
                 // Customer Dimension
@@ -1155,7 +1153,7 @@ namespace IMAT2214_1819_502_Assignment_2
                     // Else if there is no data
                     else
                     {
-                        destinationCustomer.Add("No Data available");
+                        destinationCustomer.Add("No Data Available");
                     }
                 }
 
@@ -1168,8 +1166,19 @@ namespace IMAT2214_1819_502_Assignment_2
                 string[] customerArray = { };
                 foreach (string customer in destinationCustomer)
                 {
+                    // Split the customer text into array
                     customerArray = customer.Split(':');
-                    customerTable.Rows.Add(new Object[] { customerArray[0], customerArray[1], customerArray[2], customerArray[3], customerArray[4], customerArray[5], customerArray[6], customerArray[7] });
+                    // Check if the data is not there
+                    if (customer == "No Data Available")
+                    {
+                        // Display no data available
+                        customerTable.Rows.Add(new Object[] { customerArray[0] });
+                    }
+                    else
+                    {
+                        // Display Data
+                        customerTable.Rows.Add(new Object[] { customerArray[0], customerArray[1], customerArray[2], customerArray[3], customerArray[4], customerArray[5], customerArray[6], customerArray[7] });
+                    }
                 }
 
                 // Product Dimension
@@ -1203,7 +1212,7 @@ namespace IMAT2214_1819_502_Assignment_2
                     // Else if there is no data
                     else
                     {
-                        DestinationProducts.Add("No Data available");
+                        DestinationProducts.Add("No Data Available");
                     }
                 }
             }
@@ -1217,8 +1226,19 @@ namespace IMAT2214_1819_502_Assignment_2
             string[] productArray = { };
             foreach (string product in DestinationProducts)
             {
+                // Split product string into array
                 productArray = product.Split(':');
-                productTable.Rows.Add(new Object[] { productArray[0], productArray[1], productArray[2], productArray[3], productArray[4] });
+                // Check if data is not there 
+                if (product == "No Data Available")
+                {
+                    // Display no data available
+                    productTable.Rows.Add(new Object[] { productArray[0] });
+                }
+                else
+                {
+                    // Insert product data into product data table
+                    productTable.Rows.Add(new Object[] { productArray[0], productArray[1], productArray[2], productArray[3], productArray[4] });
+                }
             }
         }
 
@@ -1302,14 +1322,19 @@ namespace IMAT2214_1819_502_Assignment_2
                     Int32 customerID = 0;
                     if (regexCustomerID.IsMatch(reader["Customer ID"].ToString()))
                     {
+                        // Customer ID
                         customerID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Customer", false);
+                        // Time ID
                         timeID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Time", false);
+                        // Product ID
                         productID = getIDs(reader["Order Date"].ToString(), reader["Customer ID"].ToString(), reader["Product ID"].ToString(), "Product", false);
                     } else
                     {
-                        Console.WriteLine(reader["Customer ID"] + " Is in the wrong format");
+                        // Customer ID
                         customerID = getIDs(reader["Order Date"].ToString(), reader["Customer Name"].ToString(), reader["Product ID"].ToString(), "Customer", true);
+                        // Time ID 
                         timeID = getIDs(reader["Order Date"].ToString(), reader["Customer Name"].ToString(), reader["Product ID"].ToString(), "Time", true);
+                        // Product ID
                         productID = getIDs(reader["Order Date"].ToString(), reader["Customer Name"].ToString(), reader["Product ID"].ToString(), "Product", true);
                     }
 
