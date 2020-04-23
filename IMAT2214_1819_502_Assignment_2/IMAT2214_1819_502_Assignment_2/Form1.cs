@@ -21,12 +21,7 @@ namespace IMAT2214_1819_502_Assignment_2
         {
             InitializeComponent();
         }
-        // Create regex to check if string is numeric
-        //https://regex101.com/r/sL6zP7/2/codegen?language=csharp
-        private static readonly Regex regexInt = new Regex(@"^[0-9]{0,9}$");
-        private static readonly Regex regexDecimal = new Regex(@"^\d{0,9}\[.]\ \d{0,9}");
         // Customer ID
-        //https://stackoverflow.com/questions/18898700/regex-for-combination-of-letters-numbers-w-special-characters/18899449
         private static readonly Regex regexCustomerID = new Regex(@"[A-Z]{2}[-]\d{0,6}");
         // Regex for product ID
         private static readonly Regex regexProductID = new Regex(@"[A-Z]{3}[-][A-Z]{2}[-]\d{0,9}");
@@ -35,7 +30,6 @@ namespace IMAT2214_1819_502_Assignment_2
         // Appearance buttons
 
         // Move form by panel
-        //https://stackoverflow.com/questions/11379209/how-do-i-make-mousedrag-inside-panel-move-form-window
         public const int WM_NCLBUTTONDOWN = 0xA1;
         public const int HT_CAPTION = 0x2;
 
@@ -2461,3 +2455,13 @@ namespace IMAT2214_1819_502_Assignment_2
     }
 }
 
+/*
+// References
+Dib, F., 2020. Online Regex Tester And Debugger: PHP, PCRE, Python, Golang And Javascript. [online] Regex101.com. Available at: <https://regex101.com/r/sL6zP7/2/codegen?language=csharp> [Accessed 23 April 2020].
+
+Dib, F., 2020. Online Regex Tester And Debugger: PHP, PCRE, Python, Golang And Javascript. [online] Regex101.com. Available at: <https://regex101.com/> [Accessed 23 April 2020].
+
+Mošmondor, D., 2020. How Do I Make Mousedrag Inside Panel Move Form Window?. [online] Stack Overflow. Available at: <https://stackoverflow.com/questions/11379209/how-do-i-make-mousedrag-inside-panel-move-form-window> [Accessed 23 April 2020].
+
+Stack Overflow. 2020. Regex For Combination Of Letters & Numbers W/ Special Characters. [online] Available at: <https://stackoverflow.com/questions/18898700/regex-for-combination-of-letters-numbers-w-special-characters/18899449> [Accessed 23 April 2020].
+    */
