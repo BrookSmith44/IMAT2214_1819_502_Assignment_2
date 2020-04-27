@@ -734,7 +734,6 @@
             this.labelSalesGraph.Size = new System.Drawing.Size(109, 20);
             this.labelSalesGraph.TabIndex = 3;
             this.labelSalesGraph.Text = "Sales Graph";
-            this.labelSalesGraph.Click += new System.EventHandler(this.labelSalesGraph_Click);
             // 
             // chartTimeSales
             // 
